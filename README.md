@@ -27,19 +27,19 @@ from a local installation and omitted from `projection_methods`.
 
 ## Configure the data location
 
-The example configurations contain no machine-specific paths. Set one local
-environment variable to the directory holding the latest all-window exports:
+For descriptive analysis, set `trustme_root` in
+`configs/analysis.example.yaml` to the directory containing the subject
+folders:
 
-```bash
-export TRUSTME_DATA_ROOT=/path/to/tobii_all
+```yaml
+trustme_root: /path/to/TrustMe
 ```
 
-For the completed `s_001_gs` all-window run described in the handoff notes,
-this is the local mount corresponding to its `late_2025/ml/tobii_all`
-directory. The analysis example expects combined export files directly below
-that directory. The experiment example expects the pipeline `_artifacts`
-layout, so set `TRUSTME_DATA_ROOT` to `_artifacts` for that command. Adjust the
-YAML paths if the local layout differs.
+The loader scans every `<subject>/ml/tobii/` directory and requires the four
+standard CSV exports (`tobii_raw_samples.csv`, `tobii_features.csv`,
+`tobii_gazemae_embeddings.csv`, and `tobii_moment_embeddings.csv`). It reports
+all incomplete subjects before starting analysis. The experiment example still
+uses `${TRUSTME_DATA_ROOT}` for the separate pipeline `_artifacts` layout.
 
 ## Main experiment
 

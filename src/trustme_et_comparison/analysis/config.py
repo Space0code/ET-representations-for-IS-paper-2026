@@ -17,13 +17,40 @@ REPRESENTATION_ORDER = (
     "MOMENT embeddings",
 )
 
+SUBJECT_CSV_FILES = {
+    "raw": "tobii_raw_samples.csv",
+    "features": "tobii_features.csv",
+    "gazemae": "tobii_gazemae_embeddings.csv",
+    "moment": "tobii_moment_embeddings.csv",
+}
+
+EXPORT_METADATA_COLUMNS = (
+    "window_id",
+    "subject",
+    "source_file",
+    "start_timestamp",
+    "1",
+    "2",
+    "3",
+    "4",
+    "5",
+    "6",
+    "7",
+    "8",
+    "9",
+    "sleep_feedback",
+    "prompt_id",
+    "prompt_time",
+)
+
 
 @dataclass(frozen=True)
 class TableConfig:
     """Tabular input and its join identifier."""
 
-    path: Path
+    path: Path | None = None
     id_column: str = "window_uid"
+    paths: tuple[Path, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -31,7 +58,7 @@ class RepresentationConfig:
     """One window-level representation input."""
 
     name: str
-    path: Path
+    path: Path | None = None
     id_column: str = "window_uid"
     feature_prefixes: tuple[str, ...] = ()
     array_key: str = "embeddings"
@@ -39,6 +66,8 @@ class RepresentationConfig:
     kind: str = "table"
     channels: tuple[str, ...] = ()
     sequence_length: int = 120
+    paths: tuple[Path, ...] = ()
+    exclude_columns: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -58,6 +87,8 @@ class AnalysisConfig:
     max_raw_rows: int
     max_projection_points: int
     random_state: int
+    trustme_root: Path | None = None
+    subjects: tuple[str, ...] = ()
 
 
 def _expand_path(value: str, base_dir: Path) -> Path:
@@ -76,6 +107,39 @@ def _table(raw: dict[str, Any], base_dir: Path) -> TableConfig:
     )
 
 
+def _discover_subject_csvs(root: Path) -> tuple[tuple[str, ...], dict[str, tuple[Path, ...]]]:
+    """Discover and strictly validate standard exports for every subject."""
+
+    if not root.is_dir():
+        raise ValueError(f"trustme_root is not a directory: {root}")
+
+    subject_dirs = sorted(path for path in root.iterdir() if path.is_dir() and not path.name.startswith("."))
+    if not subject_dirs:
+        raise ValueError(f"No subject directories found in trustme_root: {root}")
+
+    discovered: dict[str, list[Path]] = {key: [] for key in SUBJECT_CSV_FILES}
+    missing: list[str] = []
+    subjects: list[str] = []
+    for subject_dir in subject_dirs:
+        export_dir = subject_dir / "ml" / "tobii"
+        subject_missing = [
+            filename
+            for filename in SUBJECT_CSV_FILES.values()
+            if not (export_dir / filename).is_file()
+        ]
+        if subject_missing:
+            missing.append(f"{subject_dir.name}: {', '.join(subject_missing)}")
+            continue
+        subjects.append(subject_dir.name)
+        for key, filename in SUBJECT_CSV_FILES.items():
+            discovered[key].append(export_dir / filename)
+
+    if missing:
+        details = "\n  - ".join(missing)
+        raise ValueError(f"Missing subject CSV exports:\n  - {details}")
+    return tuple(subjects), {key: tuple(paths) for key, paths in discovered.items()}
+
+
 def load_analysis_config(path: str | Path) -> AnalysisConfig:
     """Load and validate descriptive-analysis YAML configuration."""
 
@@ -86,25 +150,57 @@ def load_analysis_config(path: str | Path) -> AnalysisConfig:
         raise ValueError("Analysis config must be a YAML mapping.")
 
     base_dir = config_path.parent
-    metadata = _table(raw["metadata"], base_dir)
-    raw_samples_raw = raw.get("raw_samples")
-    raw_samples = _table(raw_samples_raw, base_dir) if raw_samples_raw else None
-
-    representations: list[RepresentationConfig] = []
-    for item in raw.get("representations", []):
-        representations.append(
+    trustme_root_raw = raw.get("trustme_root")
+    trustme_root = _expand_path(str(trustme_root_raw), base_dir) if trustme_root_raw else None
+    subjects: tuple[str, ...] = ()
+    if trustme_root is not None:
+        subjects, files = _discover_subject_csvs(trustme_root)
+        metadata = TableConfig(paths=files["features"])
+        raw_samples = TableConfig(paths=files["raw"])
+        representations = [
             RepresentationConfig(
-                name=str(item["name"]),
-                path=_expand_path(str(item["path"]), base_dir),
-                id_column=str(item.get("id_column", "window_uid")),
-                feature_prefixes=tuple(str(value) for value in item.get("feature_prefixes", [])),
-                array_key=str(item.get("array_key", "embeddings")),
-                id_key=str(item.get("id_key", "window_uid")),
-                kind=str(item.get("kind", "table")),
-                channels=tuple(str(value) for value in item.get("channels", [])),
-                sequence_length=int(item.get("sequence_length", 120)),
+                name="raw",
+                kind="raw_samples",
+                paths=files["raw"],
+                channels=("PupilSizeLeft", "PupilSizeRight", "GazePointX", "GazePointY", "AverageDistance"),
+                sequence_length=120,
+            ),
+            RepresentationConfig(
+                name="handcrafted features",
+                paths=files["features"],
+                exclude_columns=("window_uid", *EXPORT_METADATA_COLUMNS),
+            ),
+            RepresentationConfig(
+                name="GazeMAE embeddings",
+                paths=files["gazemae"],
+                feature_prefixes=("z_pos_", "z_vel_"),
+            ),
+            RepresentationConfig(
+                name="MOMENT embeddings",
+                paths=files["moment"],
+                feature_prefixes=("moment_",),
+            ),
+        ]
+    else:
+        metadata = _table(raw["metadata"], base_dir)
+        raw_samples_raw = raw.get("raw_samples")
+        raw_samples = _table(raw_samples_raw, base_dir) if raw_samples_raw else None
+        representations = []
+        for item in raw.get("representations", []):
+            representations.append(
+                RepresentationConfig(
+                    name=str(item["name"]),
+                    path=_expand_path(str(item["path"]), base_dir),
+                    id_column=str(item.get("id_column", "window_uid")),
+                    feature_prefixes=tuple(str(value) for value in item.get("feature_prefixes", [])),
+                    array_key=str(item.get("array_key", "embeddings")),
+                    id_key=str(item.get("id_key", "window_uid")),
+                    kind=str(item.get("kind", "table")),
+                    channels=tuple(str(value) for value in item.get("channels", [])),
+                    sequence_length=int(item.get("sequence_length", 120)),
+                    exclude_columns=tuple(str(value) for value in item.get("exclude_columns", [])),
+                )
             )
-        )
     names = [item.name for item in representations]
     unknown = sorted(set(names) - set(REPRESENTATION_ORDER))
     if unknown:
@@ -143,4 +239,6 @@ def load_analysis_config(path: str | Path) -> AnalysisConfig:
         max_raw_rows=int(plots.get("max_raw_rows", 250_000)),
         max_projection_points=int(plots.get("max_projection_points", 5_000)),
         random_state=int(raw.get("random_state", 42)),
+        trustme_root=trustme_root,
+        subjects=subjects,
     )

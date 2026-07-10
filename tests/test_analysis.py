@@ -34,6 +34,7 @@ def _write_fixture_data(root: Path) -> None:
                     "PupilSizeRight": 3.1 + label + step / 10,
                     "GazePointX": step / 5,
                     "GazePointY": (5 - step) / 5,
+                    "AverageDistance": 60.0 + step,
                 }
             )
     pd.DataFrame(raw_rows).to_csv(root / "raw.csv", index=False)
@@ -77,6 +78,57 @@ plots:
     return config
 
 
+def _write_subject_tree(root: Path) -> Path:
+    """Write two standard per-subject export directories."""
+
+    source = root / "source"
+    source.mkdir()
+    _write_fixture_data(source)
+    trustme_root = root / "TrustMe"
+    features = pd.read_csv(source / "features.csv")
+    raw = pd.read_csv(source / "raw.csv")
+    gazemae = pd.read_csv(source / "gazemae.csv")
+    moment = pd.read_csv(source / "moment.csv")
+    for subject in ["s0", "s1"]:
+        output = trustme_root / subject / "ml" / "tobii"
+        output.mkdir(parents=True)
+        ids = set(features.loc[features["Subject"] == subject, "window_uid"])
+        features.loc[features["window_uid"].isin(ids)].rename(columns={"Subject": "subject"}).to_csv(
+            output / "tobii_features.csv", index=False
+        )
+        raw.loc[raw["window_uid"].isin(ids)].to_csv(output / "tobii_raw_samples.csv", index=False)
+        gazemae.loc[gazemae["window_uid"].isin(ids)].to_csv(
+            output / "tobii_gazemae_embeddings.csv", index=False
+        )
+        moment.loc[moment["window_uid"].isin(ids)].to_csv(
+            output / "tobii_moment_embeddings.csv", index=False
+        )
+    return trustme_root
+
+
+def _write_subject_tree_config(root: Path, trustme_root: Path) -> Path:
+    """Write a root-only subject-tree analysis config."""
+
+    path = root / "tree_analysis.yaml"
+    path.write_text(
+        f"""
+trustme_root: {trustme_root}
+output_dir: {root / 'tree_output'}
+subject_column: subject
+target_columns: [\"5\"]
+plots:
+  pupil_columns: [PupilSizeLeft, PupilSizeRight]
+  gaze_columns: [GazePointX, GazePointY]
+  projection_methods: [pca]
+  color_by: [\"5\", subject]
+  max_raw_rows: 100
+  max_projection_points: 100
+""".strip(),
+        encoding="utf-8",
+    )
+    return path
+
+
 def test_config_enforces_representation_order(tmp_path: Path) -> None:
     """Canonical order is independent of the YAML input order."""
 
@@ -112,3 +164,34 @@ def test_analysis_smoke_run(tmp_path: Path) -> None:
     assert (output_dir / "manifest.json").exists()
     assert (output_dir / "gaze_density.png").exists()
     assert len(list(output_dir.glob("projection_*.csv"))) == 4
+
+
+def test_subject_tree_is_discovered_and_combined(tmp_path: Path) -> None:
+    """One root parameter discovers all subjects and standard representations."""
+
+    trustme_root = _write_subject_tree(tmp_path)
+    config_path = _write_subject_tree_config(tmp_path, trustme_root)
+    config = load_analysis_config(config_path)
+    assert config.subjects == ("s0", "s1")
+    assert all(len(representation.paths) == 2 for representation in config.representations)
+
+    output_dir = run_analysis(config_path)
+    manifest = pd.read_json(output_dir / "manifest.json", typ="series")
+    assert manifest["subject_count"] == 2
+
+
+def test_subject_tree_reports_all_missing_exports(tmp_path: Path) -> None:
+    """Incomplete subject exports fail before analysis starts."""
+
+    trustme_root = tmp_path / "TrustMe"
+    (trustme_root / "s0" / "ml" / "tobii").mkdir(parents=True)
+    config_path = _write_subject_tree_config(tmp_path, trustme_root)
+    try:
+        load_analysis_config(config_path)
+    except ValueError as exc:
+        message = str(exc)
+        assert "s0" in message
+        assert "tobii_raw_samples.csv" in message
+        assert "tobii_moment_embeddings.csv" in message
+    else:
+        raise AssertionError("Expected missing subject exports to raise ValueError")

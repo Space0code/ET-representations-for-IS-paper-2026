@@ -75,11 +75,9 @@ def run_analysis(config_path: str | Path) -> Path:
                 if target in raw.columns:
                     outputs.append(plot_pupil_distributions(raw, config.pupil_columns, target, config.output_dir))
 
+    sampled_metadata = sample_rows(metadata, config.max_projection_points, config.random_state)
+    allowed_ids = set(sampled_metadata[config.metadata.id_column].astype(str))
     for representation in config.representations:
-        allowed_ids: set[str] | None = None
-        if representation.kind == "raw_samples":
-            sampled_metadata = sample_rows(metadata, config.max_projection_points, config.random_state)
-            allowed_ids = set(sampled_metadata[config.metadata.id_column].astype(str))
         ids, matrix = load_representation(representation, allowed_ids=allowed_ids)
         index_frame = pd.DataFrame({config.metadata.id_column: ids, "matrix_index": range(len(ids))})
         joined = index_frame.merge(metadata, on=config.metadata.id_column, how="inner")
@@ -108,6 +106,9 @@ def run_analysis(config_path: str | Path) -> Path:
 
     manifest = {
         "config": str(Path(config_path).resolve()),
+        "trustme_root": str(config.trustme_root) if config.trustme_root else None,
+        "subjects": list(config.subjects),
+        "subject_count": len(config.subjects) or metadata[config.subject_column].nunique(),
         "metadata_windows": len(metadata),
         "outputs": [str(path) for path in outputs],
     }

@@ -9,3 +9,7 @@
 - Key files: `configs/experiments.example.yaml`, `configs/analysis.example.yaml`, `tobii_experiments/run_zoja_protocols.py`, `tobii_experiments/run_data_analysis.py`, `PAPER_OUTLINE.md`, and `README.md`. Paths use `${TRUSTME_DATA_ROOT}`; no participant data, outputs, weights, credentials, or sensitive server paths may be committed.
 - Analysis outputs: class and subject distributions, pupil distributions, gaze density, missingness, and PCA/t-SNE/optional UMAP projections colored by class/subject; raw CSV sampling is streamed and raw windows are resampled/flattened only for visualization. Projections are illustrative, not separability evidence.
 - Environment/rules: use the single `trust-me-et` conda environment and root `requirements.txt`; typed, readable Python with concise docstrings and YAML/CLI-configurable paths. Initial verification: both CLIs/configs load, synthetic suite passes (`4 passed`), and the repository contained no large/sensitive artifacts.
+
+## 2 — Subject-tree analysis input (2026-07-10)
+
+- Labelled per-subject exports are sufficient for current supervised/descriptive work. Analysis config now needs only `trustme_root`; code discovers every `<subject>/ml/tobii/`, strictly requires the four standard raw/features/GazeMAE/MOMENT CSVs, combines subjects in memory, and records subjects in the manifest. `paper/` is out of scope and must remain untouched.
