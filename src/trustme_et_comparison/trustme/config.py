@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 import re
 from typing import Any
@@ -27,9 +28,9 @@ from .types import (
 
 
 def _resolve_path(repo_root: Path, maybe_relative: str) -> Path:
-    """Resolve relative paths against repository root."""
+    """Expand user/environment tokens and resolve relative paths."""
 
-    path = Path(maybe_relative)
+    path = Path(os.path.expandvars(os.path.expanduser(maybe_relative)))
     if path.is_absolute():
         return path
     return (repo_root / path).resolve()

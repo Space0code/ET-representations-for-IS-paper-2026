@@ -1,0 +1,42 @@
+# Point TRUSTME_DATA_ROOT at a directory containing the combined all-window exports.
+random_state: 42
+output_dir: ../results/data_analysis
+subject_column: subject
+target_columns: ["5"]
+
+metadata:
+  path: ${TRUSTME_DATA_ROOT}/tobii_features.csv
+  id_column: window_uid
+
+raw_samples:
+  path: ${TRUSTME_DATA_ROOT}/tobii_raw_samples.csv
+  id_column: window_uid
+
+# Keep this order in figures and reporting.
+representations:
+  - name: raw
+    kind: raw_samples
+    path: ${TRUSTME_DATA_ROOT}/tobii_raw_samples.csv
+    id_column: window_uid
+    channels: [PupilSizeLeft, PupilSizeRight, GazePointX, GazePointY, AverageDistance]
+    sequence_length: 120
+  - name: handcrafted features
+    path: ${TRUSTME_DATA_ROOT}/tobii_features.csv
+    id_column: window_uid
+  - name: GazeMAE embeddings
+    path: ${TRUSTME_DATA_ROOT}/tobii_gazemae_embeddings.csv
+    id_column: window_uid
+    feature_prefixes: [z_pos_, z_vel_]
+  - name: MOMENT embeddings
+    path: ${TRUSTME_DATA_ROOT}/tobii_moment_embeddings.csv
+    id_column: window_uid
+    feature_prefixes: [moment_]
+
+plots:
+  pupil_columns: [PupilSizeLeft, PupilSizeRight]
+  gaze_columns: [GazePointX, GazePointY]
+  projection_methods: [pca, tsne, umap]
+  color_by: ["5", subject]
+  max_raw_rows: 250000
+  max_projection_points: 5000
+

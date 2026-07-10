@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.coverage
+.idea/
+.vscode/
+data/
+logs/
+results/
+outputs/
+*.ckpt
+*.pt
+*.pth
+
