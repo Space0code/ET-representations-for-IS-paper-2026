@@ -13,3 +13,9 @@
 ## 2 — Subject-tree analysis input (2026-07-10)
 
 - Labelled per-subject exports are sufficient for current supervised/descriptive work. Analysis config now needs only `trustme_root`; code discovers every `<subject>/ml/tobii/`, strictly requires the four standard raw/features/GazeMAE/MOMENT CSVs, combines subjects in memory, and records subjects in the manifest. `paper/` is out of scope and must remain untouched.
+
+## 3 — Paper scaffold (2026-07-10)
+
+- paper/main.tex is now a project-specific Information Society 2026 manuscript scaffold, replacing the pasted ACM sample. It uses references.bib (not the missing sample-base.bib), has no sample teaser asset, and contains contextual red placeholder markers for author details, dataset facts, citations, and results that are not yet known.
+- The scaffold follows PAPER_OUTLINE.md: Introduction, Related Work, Dataset and Preprocessing, Representations, Experimental Setup, Results, Discussion, Conclusion, and a Reproducibility appendix. The recommended first prose is the Introduction, followed by Dataset and Preprocessing once study facts are confirmed; Results and Conclusion deliberately remain result-specific placeholders.
+- Real run validated 17 subjects/68 representation CSVs and completed all PCA, t-SNE, and UMAP outputs. `umap-learn==0.5.12` was added to the existing `trust-me-et` environment (already declared in repository requirements); UMAP uses explicit `n_jobs=1` with the fixed seed for reproducibility and warning-free execution.
