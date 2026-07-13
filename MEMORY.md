@@ -38,3 +38,12 @@
 - The experimental target remains the current LOSO rule: per-training-subject mean-centering, with the held-out subject centred by the global training mean. Do not replace this with participant-median labels.
 - Descriptive visualizations additionally use a clearly separate diagnostic binary label, `q5 > global median(q5)`, calculated over the entire processed dataset. The observed global median is `4.0`; this diagnostic label is never used for model training or reported LOSO metrics.
 - `configs/analysis.example.yaml` now reads `tobii_coordinate_normalized` and writes `results/data_analysis_q5/`. It contains only raw-q5 and binary-q5 class distributions, the normalized gaze-density map, and PCA/t-SNE/UMAP projections; no subject-coloured, pupil/violin, or missingness figures. Outputs are grouped as `<raw|binary>_q5/<pca|tsne|umap>/` for representation-by-method comparison.
+
+## 7 — Bullet-only manuscript map (2026-07-13)
+
+- `paper/main.tex` is now a bullet-only writing map: empty abstract; Introduction; Related Work; Methodology with Data and Eye-Tracking Representations plus Experimental Design; Results; Discussion; Conclusion. No existing prose, appendix, or Results/Discussion subsections remain.
+- The outline specifies Table 1 (main LOSO representation comparison), Figure 1 (normalized gaze-density context), and one selected continuous-q5 projection as Figure 2, including their intended interpretation. The user will write all final sentences in their own style after results are final.
+
+## 8 — Split manuscript chapters (2026-07-13)
+
+- `paper/main.tex` now retains only the shared template, title material, empty abstract, acknowledgements, bibliography, and `\input` directives. The six manuscript chapters reside in `paper/sections/` as separate files: introduction, related work, methodology, results, discussion, and conclusion.

@@ -17,225 +17,36 @@
 \acmConference[Information Society 2026]{Information Society 2026: 29th International Multiconference}{5--9 October 2026}{Ljubljana, Slovenia}
 \settopmatter{printccs=false,printacmref=false}
 
-% Replace bracketed items as details and results are confirmed.
 \newcommand{\placeholder}[1]{\textcolor{red}{[\textsc{To complete:} #1]}}
-\newcommand{\citationneeded}{\textcolor{red}{[\textsc{Citation needed}]}}
 
 \begin{document}
 
 \title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Office Workers}
 
-% Add each author only after names, affiliations, and email addresses are final.
 \author{\placeholder{Author name}}
 \affiliation{%
   \institution{\placeholder{Institution}}
   \city{\placeholder{City}}
   \country{\placeholder{Country}}}
-% Replace this syntactically valid address with the corresponding author's email.
 \email{author@example.org}
 \renewcommand{\shortauthors}{\placeholder{Author surname} et al.}
 
+% Write the abstract after the final experiment and result selection.
 \begin{abstract}
-Eye tracking can provide behavioural evidence about user state, but it remains
-unclear which representation is most useful when predictions must generalise to
-unseen people. This paper compares four representations of Tobii eye-tracking
-windows from the TrustMe study: raw gaze and pupil signals, handcrafted
-features, GazeMAE embeddings, and MOMENT embeddings. We frame the task as
-predicting the self-report target \textit{q5}, ``How immersed in your work did
-you feel just now?'', and evaluate a
-majority baseline, Random Forest, and multilayer perceptron under a
-leave-one-subject-out protocol with fold-local preprocessing. We report
-accuracy, balanced accuracy, macro-F1, and AUC, retaining undefined AUC values
-for one-class held-out folds. The learned encoders are frozen: only the
-prediction head is trained. \placeholder{Insert the common cohort size, the
-principal quantitative result, and the resulting practical recommendation.}
 \end{abstract}
 
-\keywords{eye tracking, user-state prediction, representation learning, GazeMAE, MOMENT, subject generalisation}
+\keywords{eye tracking, engagement inference, representation learning, GazeMAE, MOMENT, subject generalisation}
 
 \maketitle
 
-\section{Introduction}
-
-Eye tracking offers a detailed record of gaze behaviour and pupil dynamics that
-can support inferences about user state in interactive systems
-\citationneeded. Yet, choosing how to represent those signals remains a
-practical and methodological decision. Raw windows retain temporal detail;
-handcrafted features encode established domain knowledge and can be easier to
-interpret; and learned embeddings may transfer useful structure from gaze-
-specific or general time-series pretraining.
-
-This study makes that choice explicit through a controlled comparison on Tobii
-windows from office workers in the TrustMe study. The same labelled windows and subject-
-generalisation protocol are used to compare raw signals, handcrafted features,
-GazeMAE embeddings, and MOMENT embeddings. The primary target is \textit{q5}
-(Engagement): ``How immersed in your work did you feel just now?''
-
-Our research question is: \emph{Which eye-tracking representation most
-reliably infers self-reported engagement for unseen office workers?} We make
-three contributions: (1) a like-for-like comparison of four representation
-families; (2) a leakage-safe leave-one-subject-out evaluation with fold-local
-preprocessing; and (3) practical evidence on the out-of-the-box utility of
-frozen pretrained encoders relative to raw signals and handcrafted features.
-
-\section{Related Work}
-
-\placeholder{Review eye tracking for user-state, engagement, cognitive-load,
-and affect prediction; introduce classical gaze and pupil features; and cite
-the original GazeMAE and MOMENT papers. Position this work as an empirical
-comparison, not a new representation-learning method.}
-
-Subject-dependent behavioural data can give overly optimistic results under
-random window-level splits. \placeholder{Add literature supporting
-subject-disjoint evaluation and fold-local normalisation.}
-
-\section{Dataset and Preprocessing}
-\label{sec:data}
-
-\subsection{TrustMe Tobii Data}
-
-The analysis starts from already computed representations of TrustMe Tobii
-recordings. Raw participant data, derived data, model weights, and results are
-not included in this repository. \placeholder{State the study purpose, ethics
-or consent information where applicable, participant count, recording setup,
-sampling characteristics, session structure, and exclusions.}
-
-\subsection{Windows and Target}
-
-Representations are aligned through a common window identifier
-(\texttt{window\_uid}). Supervised analyses use labelled windows only and use
-their common intersection across the four representations, ensuring that a
-representation is not advantaged by a different cohort. \placeholder{Specify
-window duration, overlap, ordering within participant,
-response scale, binarisation rule, and final counts of subjects and windows.}
-
-\subsection{Data Quality and Fold-Local Processing}
-
-Raw Tobii channels comprise left and right pupil size, horizontal and vertical
-gaze coordinates, and average distance. Validity fields are used during raw
-signal processing. For the main protocol, all data-dependent operations,
-including imputation, feature filtering, scaling where enabled, and target
-centring, are fitted using training subjects only and then applied to the
-held-out subject. Gaze coordinates are first normalized to the display extent
-using the recording-resolution metadata. \placeholder{Report the final missing-data policy and
-quality-control exclusions.}
-
-\section{Eye-Tracking Representations}
-
-We compare the following families in a fixed order throughout the paper.
-
-\subsection{Raw Signals}
-
-Each raw window contains five channels: left and right pupil size, gaze point
-coordinates $(x,y)$, and average distance. The current experimental
-configuration uses 120 samples per channel with truncate-or-pad length handling.
-\placeholder{Confirm the final preprocessing, input dimensionality, and
-whether this configuration is retained for the submitted experiment.}
-
-\subsection{Handcrafted Features}
-
-The handcrafted representation is loaded from the TrustMe feature export.
-Structural metadata are excluded; features with excessive missingness and
-highly correlated features are filtered within each training fold.
-\placeholder{List the retained feature families and the final number of
-features.}
-
-\subsection{GazeMAE Embeddings}
-
-GazeMAE provides a gaze-specific learned embedding for each window
-\cite{bautista2020gazemae}. Its pretrained encoder is frozen; only the
-downstream prediction head is trained.
-\placeholder{Document the checkpoint, its input signals, pooling or embedding
-selection, quality-control requirements, and final dimensionality. Cite the
-source paper.}
-
-\subsection{MOMENT Embeddings}
-
-MOMENT provides a general-purpose time-series embedding of each window
-\cite{goswami2024moment}. Its pretrained encoder is likewise frozen; only the
-downstream prediction head is trained.
-\placeholder{Document the pretrained model, input channels, pooling method,
-quality-control requirements, final dimensionality, and any window-count
-difference relative to GazeMAE. Cite the source paper.}
-
-\section{Experimental Setup}
-
-\subsection{Models}
-
-We use a most-frequent-class classifier as the majority reference baseline,
-a class-balanced Random Forest with 300 trees, and a multilayer perceptron.
-The current MLP configuration has hidden layers of sizes 1028, 512, 256, 128,
-and 64, GELU activations, Adam optimisation, early stopping, and a fixed seed.
-\placeholder{Confirm hyperparameters after the final run and explain any
-model-specific preprocessing.}
-
-\subsection{Primary Evaluation Protocol}
-
-The primary analysis is leave-one-subject-out (LOSO) evaluation with the
-normalised label rule configured in the project. Each fold holds out one
-participant, preventing information from that person's windows from entering
-training or preprocessing. The current q5 rule centres targets using training
-subjects and handles an unseen subject using the global training mean, with a
-threshold of 3.0. \placeholder{Verify the interpretation of this rule and
-state the exact final target definition in reader-facing language.}
-
-\subsection{Metrics and Reporting}
-
-Accuracy is the primary metric. We also report balanced accuracy with deltas
-over the majority baseline, macro-F1, and AUC. One-class held-out folds are retained; metrics that
-are undefined for such a fold are recorded as \texttt{NaN} rather than silently
-discarded. Primary summaries aggregate at the subject level.
-\placeholder{Specify uncertainty intervals or paired statistical comparisons,
-if used.}
-
-\section{Results}
-\label{sec:results}
-
-\placeholder{Do not draft conclusions here before the final experiment run.
-Insert one main table with representation, model, accuracy ($\Delta$), balanced
-accuracy ($\Delta$), macro-F1, and AUC. Deltas are paired against the majority
-baseline within each held-out-subject fold before aggregation. Order
-representations as raw, handcrafted, GazeMAE, and MOMENT; show the majority
-baseline first. State the number of folds on which AUC, balanced accuracy, and
-macro-F1 are defined.}
-
-\subsection{Main Representation Comparison}
-
-\placeholder{State the principal LOSO result, compare it with the majority
-baseline, and distinguish representation effects from classifier effects.}
-
-\subsection{Subject-Level Results}
-
-\placeholder{Use a gaze-density heatmap on normalized display coordinates and
-select one PCA, t-SNE, or UMAP projection coloured by the continuous q5
-engagement rating only if it adds an interpretable result; projections are
-exploratory, not evidence of predictive separability.}
-
-\section{Discussion}
-
-\placeholder{Answer the research question using the final results. Discuss
-whether learned embeddings improve on raw signals or handcrafted features;
-separate performance from preprocessing cost, interpretability, and deployment
-constraints; and avoid treating two-dimensional projections as proof of class
-separability.}
-
-\subsection{Limitations}
-
-The conclusions are limited to one dataset, one windowing configuration,
-self-reported engagement, frozen pretrained checkpoints, and the selected
-coordinate-quality and target-binarisation choices.
-\placeholder{Add final limitations concerning sample size, label noise,
-quality-control decisions, and generalisability.}
-
-\section{Conclusion}
-
-\placeholder{Summarise the final controlled comparison, its strongest result,
-and a concise recommendation for practitioners choosing an eye-tracking
-representation.}
+\input{sections/01_introduction}
+\input{sections/02_related_work}
+\input{sections/03_methodology}
+\input{sections/04_results}
+\input{sections/05_discussion}
+\input{sections/06_conclusion}
 
 \begin{acks}
-\placeholder{Add funding, institutional, and data-collection acknowledgments
-only if required and approved.}
 \end{acks}
 
 \printbibliography

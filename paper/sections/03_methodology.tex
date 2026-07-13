@@ -1,0 +1,45 @@
+\section{Methodology}
+
+\subsection{Data and Eye-Tracking Representations}
+
+\begin{itemize}
+  \item TrustMe study; office-worker recordings
+  \item Participant count, sessions, recording duration, sampling rate, exclusions
+  \item Tobii channels: left/right pupil size, gaze $x/y$, average distance
+  \item q5 engagement item: ``How immersed in your work did you feel just now?''
+  \item q5 response scale and observed raw-label distribution
+  \item Window duration, overlap, temporal ordering
+  \item Common \texttt{window\_uid} intersection across all four representations
+  \item Labelled windows only; final subject and window counts
+  \item Validity fields; missing-value and quality-control policy
+  \item Display-resolution metadata; per-recording $x/y$ normalization to $[0,1]$
+  \item Out-of-screen coordinates: retained for modelling policy; excluded from descriptive heatmap
+  \item Representation order: raw, handcrafted features, GazeMAE embeddings, MOMENT embeddings
+  \item Raw: five channels, 120 samples per channel, truncate/pad policy, final dimensionality
+  \item Handcrafted: feature families, metadata removal, missingness filtering, correlation filtering
+  \item GazeMAE: checkpoint, inputs, embedding selection, dimensionality, frozen encoder
+  \item MOMENT: checkpoint, inputs, pooling, dimensionality, frozen encoder
+  \item \textbf{Figure 1 --- normalized gaze-density map:} screen-coordinate coverage; recording-quality context; non-predictive descriptive evidence
+\end{itemize}
+
+\subsection{Experimental Design}
+
+\begin{itemize}
+  \item Primary task: binary q5 engagement inference
+  \item LOSO target construction: training-subject mean centring; held-out subject global-training-mean centring
+  \item Diagnostic visualization label only: raw q5; binary q5 above global processed-data median; no use in model training or metrics
+  \item Same aligned cohort, target definition, and folds across representations
+  \item Majority-class baseline
+  \item Random Forest: 300 trees, balanced class weights, fixed seed
+  \item MLP: GELU, layer normalization, Adam, early stopping, fixed seed
+  \item Representation-by-model grid; robustness check rather than model-comparison claim
+  \item Fold-local handcrafted-feature selection and imputation
+  \item Fold-local median imputation; train-fit standardization; held-out-subject transform
+  \item No test-subject information in preprocessing parameters
+  \item Accuracy: primary metric
+  \item Accuracy delta and balanced-accuracy delta: paired majority-baseline comparison within LOSO folds
+  \item Macro-F1 and ROC-AUC: secondary discrimination metrics
+  \item Subject-macro aggregation
+  \item One-class test folds: retained accuracy; undefined balanced accuracy, macro-F1, and AUC; reported valid-fold counts
+  \item Persistence baseline: contextual within-subject temporal check; text only; not comparable with unseen-subject main table
+\end{itemize}
