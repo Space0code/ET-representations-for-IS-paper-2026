@@ -1,15 +1,18 @@
 # Root containing <subject>/ml/tobii/<standard representation CSVs>.
 trustme_root: /home/ppg/eyetracking/TrustME-ET/data/raw/TrustMe
+# Read coordinate-normalized copies created beside each subject's `tobii` export.
+subject_export_dir: tobii_coordinate_normalized
 
 random_state: 42
-output_dir: ../results/data_analysis
+# Kept separate from legacy, ungrouped analysis outputs.
+output_dir: ../results/data_analysis_q5
 subject_column: subject
 target_columns: ["5"]
+target_name: q5
 
 plots:
   pupil_columns: [PupilSizeLeft, PupilSizeRight]
   gaze_columns: [GazePointX, GazePointY]
   projection_methods: [pca, tsne, umap]
-  color_by: ["5", subject]
   max_raw_rows: 250000
   max_projection_points: 5000

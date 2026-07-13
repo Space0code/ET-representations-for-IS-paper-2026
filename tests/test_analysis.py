@@ -162,8 +162,10 @@ def test_analysis_smoke_run(tmp_path: Path) -> None:
     _write_fixture_data(tmp_path)
     output_dir = run_analysis(_write_config(tmp_path))
     assert (output_dir / "manifest.json").exists()
-    assert (output_dir / "gaze_density.png").exists()
-    assert len(list(output_dir.glob("projection_*.csv"))) == 4
+    assert (output_dir / "raw_q5" / "descriptive" / "gaze_density.png").exists()
+    assert (output_dir / "raw_q5" / "class_distribution.png").exists()
+    assert (output_dir / "binary_q5" / "class_distribution.png").exists()
+    assert len(list(output_dir.glob("**/projection_*.csv"))) == 8
 
 
 def test_subject_tree_is_discovered_and_combined(tmp_path: Path) -> None:

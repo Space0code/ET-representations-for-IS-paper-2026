@@ -79,6 +79,7 @@ class AnalysisConfig:
     representations: tuple[RepresentationConfig, ...]
     output_dir: Path
     target_columns: tuple[str, ...]
+    target_name: str
     subject_column: str
     pupil_columns: tuple[str, ...]
     gaze_columns: tuple[str, str]
@@ -88,6 +89,7 @@ class AnalysisConfig:
     max_projection_points: int
     random_state: int
     trustme_root: Path | None = None
+    subject_export_dir: str = "tobii"
     subjects: tuple[str, ...] = ()
 
 
@@ -107,8 +109,11 @@ def _table(raw: dict[str, Any], base_dir: Path) -> TableConfig:
     )
 
 
-def _discover_subject_csvs(root: Path) -> tuple[tuple[str, ...], dict[str, tuple[Path, ...]]]:
-    """Discover and strictly validate standard exports for every subject."""
+def _discover_subject_csvs(
+    root: Path,
+    subject_export_dir: str,
+) -> tuple[tuple[str, ...], dict[str, tuple[Path, ...]]]:
+    """Discover and strictly validate one named export directory per subject."""
 
     if not root.is_dir():
         raise ValueError(f"trustme_root is not a directory: {root}")
@@ -121,7 +126,7 @@ def _discover_subject_csvs(root: Path) -> tuple[tuple[str, ...], dict[str, tuple
     missing: list[str] = []
     subjects: list[str] = []
     for subject_dir in subject_dirs:
-        export_dir = subject_dir / "ml" / "tobii"
+        export_dir = subject_dir / "ml" / subject_export_dir
         subject_missing = [
             filename
             for filename in SUBJECT_CSV_FILES.values()
@@ -152,9 +157,12 @@ def load_analysis_config(path: str | Path) -> AnalysisConfig:
     base_dir = config_path.parent
     trustme_root_raw = raw.get("trustme_root")
     trustme_root = _expand_path(str(trustme_root_raw), base_dir) if trustme_root_raw else None
+    subject_export_dir = str(raw.get("subject_export_dir", "tobii"))
+    if Path(subject_export_dir).name != subject_export_dir:
+        raise ValueError("subject_export_dir must be a directory name, not a path.")
     subjects: tuple[str, ...] = ()
     if trustme_root is not None:
-        subjects, files = _discover_subject_csvs(trustme_root)
+        subjects, files = _discover_subject_csvs(trustme_root, subject_export_dir)
         metadata = TableConfig(paths=files["features"])
         raw_samples = TableConfig(paths=files["raw"])
         representations = [
@@ -231,6 +239,7 @@ def load_analysis_config(path: str | Path) -> AnalysisConfig:
         representations=tuple(representations),
         output_dir=_expand_path(str(raw.get("output_dir", "../results/data_analysis")), base_dir),
         target_columns=tuple(str(value) for value in raw.get("target_columns", ["5"])),
+        target_name=str(raw.get("target_name", "q5")),
         subject_column=str(raw.get("subject_column", "Subject")),
         pupil_columns=tuple(str(value) for value in plots.get("pupil_columns", ["PupilSizeLeft", "PupilSizeRight"])),
         gaze_columns=(gaze_columns[0], gaze_columns[1]),
@@ -240,5 +249,6 @@ def load_analysis_config(path: str | Path) -> AnalysisConfig:
         max_projection_points=int(plots.get("max_projection_points", 5_000)),
         random_state=int(raw.get("random_state", 42)),
         trustme_root=trustme_root,
+        subject_export_dir=subject_export_dir,
         subjects=subjects,
     )

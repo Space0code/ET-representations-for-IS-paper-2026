@@ -23,7 +23,7 @@
 
 \begin{document}
 
-\title[Comparing Eye-Tracking Representations]{Raw Signals, Handcrafted Features, or Learned Embeddings? A Controlled Comparison of Eye-Tracking Representations for User-State Prediction}
+\title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Office Workers}
 
 % Add each author only after names, affiliations, and email addresses are final.
 \author{\placeholder{Author name}}
@@ -41,11 +41,13 @@ unclear which representation is most useful when predictions must generalise to
 unseen people. This paper compares four representations of Tobii eye-tracking
 windows from the TrustMe study: raw gaze and pupil signals, handcrafted
 features, GazeMAE embeddings, and MOMENT embeddings. We frame the task as
-predicting the provisional self-report target \textit{q5} and evaluate a
+predicting the self-report target \textit{q5}, ``How immersed in your work did
+you feel just now?'', and evaluate a
 majority baseline, Random Forest, and multilayer perceptron under a
 leave-one-subject-out protocol with fold-local preprocessing. We report
 accuracy, balanced accuracy, macro-F1, and AUC, retaining undefined AUC values
-for one-class held-out folds. \placeholder{Insert the common cohort size, the
+for one-class held-out folds. The learned encoders are frozen: only the
+prediction head is trained. \placeholder{Insert the common cohort size, the
 principal quantitative result, and the resulting practical recommendation.}
 \end{abstract}
 
@@ -64,18 +66,17 @@ interpret; and learned embeddings may transfer useful structure from gaze-
 specific or general time-series pretraining.
 
 This study makes that choice explicit through a controlled comparison on Tobii
-windows from the TrustMe study. The same labelled windows and subject-
+windows from office workers in the TrustMe study. The same labelled windows and subject-
 generalisation protocol are used to compare raw signals, handcrafted features,
-GazeMAE embeddings, and MOMENT embeddings. The provisional primary target is
-\textit{q5}; its wording, scale, and substantive interpretation are documented
-in Section~\ref{sec:data} before the final submission.
+GazeMAE embeddings, and MOMENT embeddings. The primary target is \textit{q5}
+(Engagement): ``How immersed in your work did you feel just now?''
 
-Our research question is: \emph{Which eye-tracking representation best
-predicts the selected TrustMe self-report state for unseen subjects?} We make
+Our research question is: \emph{Which eye-tracking representation most
+reliably infers self-reported engagement for unseen office workers?} We make
 three contributions: (1) a like-for-like comparison of four representation
 families; (2) a leakage-safe leave-one-subject-out evaluation with fold-local
-preprocessing; and (3) evidence-based guidance on the performance,
-interpretability, and implementation trade-offs of each representation.
+preprocessing; and (3) practical evidence on the out-of-the-box utility of
+frozen pretrained encoders relative to raw signals and handcrafted features.
 
 \section{Related Work}
 
@@ -105,7 +106,7 @@ Representations are aligned through a common window identifier
 (\texttt{window\_uid}). Supervised analyses use labelled windows only and use
 their common intersection across the four representations, ensuring that a
 representation is not advantaged by a different cohort. \placeholder{Specify
-window duration, overlap, ordering within participant, the exact q5 question,
+window duration, overlap, ordering within participant,
 response scale, binarisation rule, and final counts of subjects and windows.}
 
 \subsection{Data Quality and Fold-Local Processing}
@@ -115,7 +116,8 @@ gaze coordinates, and average distance. Validity fields are used during raw
 signal processing. For the main protocol, all data-dependent operations,
 including imputation, feature filtering, scaling where enabled, and target
 centring, are fitted using training subjects only and then applied to the
-held-out subject. \placeholder{Report the final missing-data policy and
+held-out subject. Gaze coordinates are first normalized to the display extent
+using the recording-resolution metadata. \placeholder{Report the final missing-data policy and
 quality-control exclusions.}
 
 \section{Eye-Tracking Representations}
@@ -141,7 +143,8 @@ features.}
 \subsection{GazeMAE Embeddings}
 
 GazeMAE provides a gaze-specific learned embedding for each window
-\cite{bautista2020gazemae}.
+\cite{bautista2020gazemae}. Its pretrained encoder is frozen; only the
+downstream prediction head is trained.
 \placeholder{Document the checkpoint, its input signals, pooling or embedding
 selection, quality-control requirements, and final dimensionality. Cite the
 source paper.}
@@ -149,7 +152,8 @@ source paper.}
 \subsection{MOMENT Embeddings}
 
 MOMENT provides a general-purpose time-series embedding of each window
-\cite{goswami2024moment}.
+\cite{goswami2024moment}. Its pretrained encoder is likewise frozen; only the
+downstream prediction head is trained.
 \placeholder{Document the pretrained model, input channels, pooling method,
 quality-control requirements, final dimensionality, and any window-count
 difference relative to GazeMAE. Cite the source paper.}
@@ -177,8 +181,8 @@ state the exact final target definition in reader-facing language.}
 
 \subsection{Metrics and Reporting}
 
-We report accuracy and balanced accuracy with their deltas over the majority
-baseline, macro-F1, and AUC. One-class held-out folds are retained; metrics that
+Accuracy is the primary metric. We also report balanced accuracy with deltas
+over the majority baseline, macro-F1, and AUC. One-class held-out folds are retained; metrics that
 are undefined for such a fold are recorded as \texttt{NaN} rather than silently
 discarded. Primary summaries aggregate at the subject level.
 \placeholder{Specify uncertainty intervals or paired statistical comparisons,
@@ -188,10 +192,12 @@ if used.}
 \label{sec:results}
 
 \placeholder{Do not draft conclusions here before the final experiment run.
-Insert a main table with representation, model, accuracy, $\Delta$ accuracy,
-balanced accuracy, $\Delta$ balanced accuracy, macro-F1, AUC, and
-subject-level uncertainty. Order representations as raw, handcrafted,
-GazeMAE, and MOMENT; show the majority baseline first.}
+Insert one main table with representation, model, accuracy ($\Delta$), balanced
+accuracy ($\Delta$), macro-F1, and AUC. Deltas are paired against the majority
+baseline within each held-out-subject fold before aggregation. Order
+representations as raw, handcrafted, GazeMAE, and MOMENT; show the majority
+baseline first. State the number of folds on which AUC, balanced accuracy, and
+macro-F1 are defined.}
 
 \subsection{Main Representation Comparison}
 
@@ -200,9 +206,10 @@ baseline, and distinguish representation effects from classifier effects.}
 
 \subsection{Subject-Level Results}
 
-\placeholder{Add a per-subject performance figure or distribution and
-row-normalised confusion matrices for the selected comparisons. Use a fixed
-colour scale from 0 to 1 and discuss one-class folds.}
+\placeholder{Use a gaze-density heatmap on normalized display coordinates and
+select one PCA, t-SNE, or UMAP projection coloured by the continuous q5
+engagement rating only if it adds an interpretable result; projections are
+exploratory, not evidence of predictive separability.}
 
 \section{Discussion}
 
@@ -214,8 +221,9 @@ separability.}
 
 \subsection{Limitations}
 
-The conclusions are limited to one dataset, one windowing configuration, a
-provisional self-report target, and the selected pretrained checkpoints.
+The conclusions are limited to one dataset, one windowing configuration,
+self-reported engagement, frozen pretrained checkpoints, and the selected
+coordinate-quality and target-binarisation choices.
 \placeholder{Add final limitations concerning sample size, label noise,
 quality-control decisions, and generalisability.}
 
@@ -231,12 +239,5 @@ only if required and approved.}
 \end{acks}
 
 \printbibliography
-
-\appendix
-\section{Reproducibility Details}
-
-\placeholder{Add the exact YAML configuration, representation dimensions,
-common-intersection counts, software versions, per-fold metrics, and secondary
-protocol or projection results that do not fit in the main paper.}
 
 \end{document}
