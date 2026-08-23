@@ -5,10 +5,10 @@
   \item Direct answer to the research question (which representation is most informative (yields best accuracy) for binary engagement prediction from ET)
   \item Frozen learned embeddings: out-of-the-box utility relative to raw and handcrafted alternatives
   \item Representation effect; secondary role of classifier choice
-  \item Practical recommendation: accuracy, preprocessing burden, storage, computation, interpretability
+  \item Practical recommendation: raw is the strict winner here (best scores, least preprocessing/storage/compute), but based on prior experience and the wider literature we still recommend at least trying handcrafted features for similar tasks -- this single preliminary dataset should not be read as ruling them out
   \item Implication of non-improving embeddings: task--pretraining mismatch; need for domain adaptation or fine-tuning
+  \item GazeMAE's model-dependent result (Section~4) is flagged as open, not concluded; warrants targeted follow-up before drawing a firm gaze-specific-embedding verdict
   \item Projection and heatmap: descriptive support only; no separability proof
-  \item Persistence result: temporal autocorrelation; distinct from cross-person generalisation
   \item Limitations: single dataset, office-worker sample, self-report noise, binary target construction
   \item Limitations: frozen checkpoints, fixed windowing, quality-control choices, limited subject count
   \item Future work: multi-dataset validation, calibrated personalisation, adaptation/fine-tuning, alternative target formulations

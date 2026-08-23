@@ -20,8 +20,11 @@
   \item Bold: best value per metric; no overemphasis on small model differences
   \item Main result: highest accuracy; absolute and majority-baseline improvement
   \item Representation result: raw relative to handcrafted performance  and relative to frozen GazeMAE and MOMENT embeddings
+  \item GazeMAE result is model-dependent (beats majority with RF, falls below majority/chance with MLP), unlike raw and handcrafted which improve with both models; flag as needing further investigation rather than a settled negative result
+  \item Minor observation: RF/MLP ranking flips between raw+handcrafted (MLP helps) and GazeMAE+MOMENT (MLP hurts); brief, tentative note only -- possible reading is that the flexible classifier helps only when the representation carries real signal, do not overstate
   \item One-class held-out-subject treatment; metric availability
   \item Persistence-check result: contextual temporal predictability; separate protocol; no direct ranking against LOSO models
+  \item Persistence caveat (one sentence, minor): near-ceiling result is expected because each ESM answer is broadcast unchanged to every window until the next prompt (Section~3), so most consecutive-window pairs share a label by construction; report as a sanity check only, not as evidence of genuine moment-to-moment engagement stability
   \item \textbf{Figure 2 --- selected projection:} one representation-method combination; raw q5 continuous colour scale
   \item Figure-selection criterion: clearest engagement gradient or clearest absence of label separation
   \item Figure interpretation: exploratory geometry; mixed colours as limited label separability; no causal or performance claim

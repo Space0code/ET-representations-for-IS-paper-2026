@@ -3,10 +3,14 @@
 \subsection{Data and Eye-Tracking Representations}
 
 \begin{itemize}
-  \item TrustMe study; office-worker recordings
+  \item TrustMe project (Jo\v{z}ef Stefan Institute and Universit\`a della Svizzera italiana); ongoing multimodal office-worker study, \url{https://dis.ijs.si/trust-me/}
+  \item Modalities collected across the wider project: RGB camera, eye tracker, microphone, activity-watch/screen-activity logs; this paper uses the eye-tracking modality only
+  \item Recording protocol: each participant recorded during ordinary office work for a full workday, repeated over roughly three weeks
+  \item Experience-sampling method (ESM): participants prompted several times per day with a short self-report questionnaire covering engagement, emotions (valence/arousal), fatigue, stress, physical comfort, workplace interactions, sleep, and productivity
+  \item Dataset is still being collected and is not yet public; this is a preliminary study on the currently available cohort
   \item Participant count, sessions, recording duration, sampling rate, exclusions
   \item Tobii channels: left/right pupil size, gaze $x/y$, average distance
-  \item q5 engagement item: ``How immersed in your work did you feel just now?''
+  \item q5 engagement item: ``Right now I am immersed in my work.'' One of a three-item momentary engagement subscale asked at each prompt (alongside energy/vigor and job enthusiasm items)
   \item q5 response scale and observed raw-label distribution
   \item Window duration, overlap, temporal ordering
   \item Common \texttt{window\_uid} intersection across all four representations (name it window ID in the paper and explain briefly what it is -- not literally the uid string, but what makes it unique)
