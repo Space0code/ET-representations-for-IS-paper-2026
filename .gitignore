@@ -3,7 +3,8 @@ __pycache__/
 .pytest_cache/
 .coverage
 .idea/
-.vscode/
+.vscode/*
+!.vscode/settings.json
 data/
 logs/
 results/

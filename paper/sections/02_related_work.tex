@@ -1,40 +1,19 @@
 \section{Related Work}
 
-Eye tracking has long been used as behavioural evidence for internal user
-states. Pupil dilation is a classical correlate of processing load
-\cite{kahneman1966pupil}, and fixation, saccade, blink and pupil statistics
-computed over short windows remain the dominant input to models of workload,
-affect and engagement. Our own prior work illustrates both the appeal and the
-limits of this pipeline: handcrafted ocular features supported coarse
-affective distinctions \cite{bozak2024emotion}, yet a systematic evaluation
-across several prediction targets showed that task type is recognised far more
-reliably than graded workload, and that reported accuracy depends strongly on
-how the prediction target and the validation split are defined
-\cite{bozak2026workload}. Feature engineering encodes useful domain knowledge,
-but the resulting performance is bounded by what a fixed feature set captures.
+Eye tracking has long been used as behavioural evidence for internal user states.
+Pupil dilation is a classical correlate of processing load \cite{kahneman1966pupil}, and fixation, saccade, blink and pupil statistics computed over short windows remain the dominant input to models of workload, affect and engagement.
+Our own prior work illustrates both the appeal and the limits of this pipeline: handcrafted ocular features supported coarse affective distinctions \cite{bozak2024emotion}, yet a systematic evaluation across several prediction targets showed that task type is recognised far more reliably than graded workload, and that reported accuracy depends strongly on how the prediction target and the validation split are defined \cite{bozak2026workload}.
+Feature engineering encodes useful domain knowledge, but the resulting performance is bounded by what a fixed feature set captures.
 
-Learned representations offer an alternative. GazeMAE pretrains temporal
-autoencoders on raw position and velocity signals and shows that the resulting
-gaze-specific embeddings support downstream classification through a simple
-linear head \cite{bautista2020gazemae}. In parallel, general-purpose
-time-series foundation models such as MOMENT provide a frozen multichannel
-encoder intended to transfer across domains without task-specific pretraining
-\cite{goswami2024moment}. Both are presented as replacements for
-hand-designed features, and both are typically evaluated on curated
-benchmarks rather than on modest, subject-dependent recordings of spontaneous
-behaviour. How much of that benefit survives when such encoders are applied
-out of the box in this setting remains open.
+Learned representations offer an alternative.
+GazeMAE pretrains temporal autoencoders on raw position and velocity signals and shows that the resulting gaze-specific embeddings support downstream classification through a simple linear head \cite{bautista2020gazemae}.
+In parallel, general-purpose time-series foundation models such as MOMENT provide a frozen multichannel encoder intended to transfer across domains without task-specific pretraining \cite{goswami2024moment}.
+Both are presented as replacements for hand-designed features, and both are typically evaluated on curated benchmarks rather than on modest, subject-dependent recordings of spontaneous behaviour.
+How much of that benefit survives when such encoders are applied out of the box in this setting remains open.
 
-Evaluation design is a further concern. Windows drawn from the same person are
-highly dependent, so random window splits and preprocessing fitted on the full
-dataset inflate reported performance, an effect documented in detail for other
-biosignal domains \cite{rosenblatt2024leakage}. Comparisons across
-representations are interpretable only when every candidate is evaluated on
-identical windows and labels under a subject-disjoint protocol with fold-local
-preprocessing.
+Evaluation design is a further concern.
+Windows drawn from the same person are highly dependent, so random window splits and preprocessing fitted on the full dataset inflate reported performance, an effect documented in detail for other biosignal domains \cite{rosenblatt2024leakage}.
+Comparisons across representations are interpretable only when every candidate is evaluated on identical windows and labels under a subject-disjoint protocol with fold-local preprocessing.
 
-We therefore extend our earlier feature-based analyses to learned
-representations. This preliminary study is an empirical comparison rather than
-a new encoder or fine-tuning method: raw signals, handcrafted features,
-GazeMAE and MOMENT embeddings are evaluated on the same windows, the same
-engagement target and the same leave-one-subject-out folds.
+We therefore extend our earlier feature-based analyses to learned representations.
+This preliminary study is an empirical comparison rather than a new encoder or fine-tuning method: raw signals, handcrafted features, GazeMAE and MOMENT embeddings are evaluated on the same windows, the same engagement target and the same leave-one-subject-out folds.

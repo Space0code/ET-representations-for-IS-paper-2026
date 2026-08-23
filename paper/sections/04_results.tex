@@ -14,93 +14,65 @@
 % that file is the obsolete preliminary 15-subject snapshot.
 
 \begin{table}[t]
-  \caption{Leave-one-subject-out results for binary engagement inference,
-  averaged over the 17 held-out participants. SD is the standard deviation
-  across participants and $\Delta$ is the improvement in accuracy over the
-  majority baseline, paired within folds. Balanced accuracy is relative to
-  0.500 by construction. Accuracy uses all 17 folds; the remaining metrics use
-  the 16 folds whose test participant is not single-class. M-F1 is macro-F1. Best value per
-  column in bold.}
-  \label{tab:main}
-  \setlength{\tabcolsep}{3.2pt}
-  \footnotesize
-  \begin{tabular}{lcccccc}
-    \toprule
-    & Acc. & SD & $\Delta$ & Bal.\ acc. & M-F1 & AUC \\
-    \midrule
-    Majority baseline & .524 & .346 & --- & .500 & .326 & .500 \\
-    \midrule
-    \multicolumn{7}{l}{\emph{Raw signals} (600-d)} \\
-    \quad Random forest & .527 & .147 & $+.003$ & .529 & .460 & .546 \\
-    \quad MLP & \textbf{.538} & .113 & $\mathbf{+.014}$ & \textbf{.536} & \textbf{.468} & \textbf{.551} \\
-    \midrule
-    \multicolumn{7}{l}{\emph{Handcrafted features} (58--60-d)} \\
-    \quad Random forest & .528 & .230 & $+.005$ & .508 & .418 & .527 \\
-    \quad MLP & .531 & .145 & $+.008$ & .521 & .451 & .535 \\
-    \midrule
-    \multicolumn{7}{l}{\emph{GazeMAE embeddings} (256-d)} \\
-    \quad Random forest & .535 & .155 & $+.012$ & .509 & .441 & .513 \\
-    \quad MLP & .520 & .107 & $-.004$ & .493 & .435 & .494 \\
-    \midrule
-    \multicolumn{7}{l}{\emph{MOMENT embeddings} (1{,}024-d)} \\
-    \quad Random forest & .521 & .286 & $-.002$ & .501 & .380 & .504 \\
-    \quad MLP & .507 & .274 & $-.017$ & .497 & .362 & .504 \\
-    \bottomrule
-  \end{tabular}
+	\caption{Leave-one-subject-out results for binary engagement inference, averaged over the 17 held-out participants.
+		SD is the standard deviation across participants and $\Delta$ is the improvement in accuracy over the majority baseline, paired within folds.
+		Balanced accuracy is relative to 0.500 by construction.
+		Accuracy uses all 17 folds; the remaining metrics use the 16 folds whose test participant is not single-class.
+		M-F1 is macro-F1.
+		Best value per column in bold.}
+	\label{tab:main}
+	\setlength{\tabcolsep}{3.2pt}
+	\footnotesize
+	\begin{tabular}{lcccccc}
+		\toprule
+		                    & Acc.          & SD   & $\Delta$         & Bal.\ acc.    & M-F1          & AUC           \\
+		\midrule
+		Majority baseline   & .524          & .346 & ---              & .500          & .326          & .500          \\
+		\midrule
+		\multicolumn{7}{l}{\emph{Raw signals} (600-d)}                                                                \\
+		\quad Random forest & .527          & .147 & $+.003$          & .529          & .460          & .546          \\
+		\quad MLP           & \textbf{.538} & .113 & $\mathbf{+.014}$ & \textbf{.536} & \textbf{.468} & \textbf{.551} \\
+		\midrule
+		\multicolumn{7}{l}{\emph{Handcrafted features} (58--60-d)}                                                    \\
+		\quad Random forest & .528          & .230 & $+.005$          & .508          & .418          & .527          \\
+		\quad MLP           & .531          & .145 & $+.008$          & .521          & .451          & .535          \\
+		\midrule
+		\multicolumn{7}{l}{\emph{GazeMAE embeddings} (256-d)}                                                         \\
+		\quad Random forest & .535          & .155 & $+.012$          & .509          & .441          & .513          \\
+		\quad MLP           & .520          & .107 & $-.004$          & .493          & .435          & .494          \\
+		\midrule
+		\multicolumn{7}{l}{\emph{MOMENT embeddings} (1{,}024-d)}                                                      \\
+		\quad Random forest & .521          & .286 & $-.002$          & .501          & .380          & .504          \\
+		\quad MLP           & .507          & .274 & $-.017$          & .497          & .362          & .504          \\
+		\bottomrule
+	\end{tabular}
 \end{table}
 
-Table~\ref{tab:main} reports the main comparison. Every
-representation--model combination sits close to the majority baseline. The
-best result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the
-paired baseline, and it is also best on balanced accuracy (0.536), macro-F1
-(0.468) and ROC-AUC (0.551). Handcrafted features come next and improve on the
-baseline with both classifiers (up to 0.531 accuracy and 0.535 AUC). The two
-frozen encoders trail: GazeMAE reaches 0.535 accuracy with the random forest
-but falls to 0.520, below the baseline, with the MLP, while MOMENT is at or
-below the baseline on every metric and its AUC (0.504) is indistinguishable
-from chance.
+Table~\ref{tab:main} reports the main comparison.
+Every representation--model combination sits close to the majority baseline.
+The best result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the paired baseline, and it is also best on balanced accuracy (0.536), macro-F1 (0.468) and ROC-AUC (0.551).
+Handcrafted features come next and improve on the baseline with both classifiers (up to 0.531 accuracy and 0.535 AUC).
+The two frozen encoders trail: GazeMAE reaches 0.535 accuracy with the random forest but falls to 0.520, below the baseline, with the MLP, while MOMENT is at or below the baseline on every metric and its AUC (0.504) is indistinguishable from chance.
 
-The ordering raw $\geq$ handcrafted $>$ GazeMAE $>$ MOMENT holds across all
-four metrics, but the absolute differences are small---0.003 to 0.017 in
-accuracy---and far smaller than the spread across held-out participants, whose
-accuracy standard deviations range from 0.11 to 0.29. We therefore read the
-ordering as a descriptive tendency in this cohort and attach no significance
-claim to it. GazeMAE in particular warrants a flag rather than a verdict: it
-is the only representation whose sign changes with the classifier, whereas raw
-signals and handcrafted features improve on the baseline with both, so its
-usefulness here is an open question rather than a settled negative result. A
-related and tentative observation is that the MLP helps exactly those
-representations that carry some signal and hurts the two embedding sets; one
-possible reading is that a more flexible head pays off only when there is
-something to fit, but the effect is small and we do not build on it.
+The ordering raw $\geq$ handcrafted $>$ GazeMAE $>$ MOMENT holds across all four metrics, but the absolute differences are small---0.003 to 0.017 in accuracy---and far smaller than the spread across held-out participants, whose accuracy standard deviations range from 0.11 to 0.29.
+We therefore read the ordering as a descriptive tendency in this cohort and attach no significance claim to it.
+GazeMAE in particular warrants a flag rather than a verdict: it is the only representation whose sign changes with the classifier, whereas raw signals and handcrafted features improve on the baseline with both, so its usefulness here is an open question rather than a settled negative result.
+A related and tentative observation is that the MLP helps exactly those representations that carry some signal and hurts the two embedding sets; one possible reading is that a more flexible head pays off only when there is something to fit, but the effect is small and we do not build on it.
 
 \begin{figure*}[t]
-  \centering
-  \includegraphics[width=\textwidth]{figures/fig2_tsne.png}
-  \Description{Eight scatter plots arranged in two rows of four, showing t-SNE
-  projections of the four representations coloured by engagement rating and by
-  participant.}
-  \caption{t-SNE projections of the four representations over a common sample
-  of 5{,}000 windows, coloured by engagement rating (top) and by participant
-  (bottom). No representation organises the windows by rating; the mild local
-  grouping visible for raw signals and GazeMAE follows participants rather
-  than states. The projections are exploratory geometry and are not evidence
-  about separability under a trained classifier.}
-  \label{fig:tsne}
+	\centering
+	\includegraphics[width=\textwidth]{figures/fig2_tsne.png}
+	\Description{Eight scatter plots arranged in two rows of four, showing t-SNE projections of the four representations coloured by engagement rating and by participant.}
+	\caption{t-SNE projections of the four representations over a common sample of 5{,}000 windows, coloured by engagement rating (top) and by participant (bottom).
+		No representation organises the windows by rating; the mild local grouping visible for raw signals and GazeMAE follows participants rather than states.
+		The projections are exploratory geometry and are not evidence about separability under a trained classifier.}
+	\label{fig:tsne}
 \end{figure*}
 
-Figure~\ref{fig:tsne} gives a geometric view of the same difficulty. In
-two-dimensional t-SNE projections none of the four representations arranges
-windows by engagement rating; the colours are mixed everywhere, in the learned
-embeddings as much as in the raw signal. Colouring the identical projections
-by participant instead reveals some local grouping for raw signals and
-GazeMAE, suggesting that what structure these representations do capture is at
-least partly person-specific rather than state-specific.
+Figure~\ref{fig:tsne} gives a geometric view of the same difficulty.
+In two-dimensional t-SNE projections none of the four representations arranges windows by engagement rating; the colours are mixed everywhere, in the learned embeddings as much as in the raw signal.
+Colouring the identical projections by participant instead reveals some local grouping for raw signals and GazeMAE, suggesting that what structure these representations do capture is at least partly person-specific rather than state-specific.
 
-For context, a one-step persistence predictor applied within recordings
-reaches 0.999 accuracy, 0.960 balanced accuracy and 0.965 macro-F1 over 1{,}434
-temporal blocks. This is a sanity check on the label series rather than a
-competitive result: because each questionnaire answer is broadcast unchanged
-to every window of the preceding 15-minute interval (Section~\ref{sec:method}), most
-consecutive window pairs share a label by construction. It is not comparable
-with the unseen-participant results above.
+For context, a one-step persistence predictor applied within recordings reaches 0.999 accuracy, 0.960 balanced accuracy and 0.965 macro-F1 over 1{,}434 temporal blocks.
+This is a sanity check on the label series rather than a competitive result: because each questionnaire answer is broadcast unchanged to every window of the preceding 15-minute interval (Section~\ref{sec:method}), most consecutive window pairs share a label by construction.
+It is not comparable with the unseen-participant results above.

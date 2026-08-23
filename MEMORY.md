@@ -111,3 +111,8 @@
 - Handcrafted pipeline numbers: 199 exported columns, 18 structurally dropped, 181 numeric candidates, **58–60 selected per LOSO fold** (recomputed with `FeatureFoldPreprocessor` on the exact 140,531-window cohort; 14 zero-variance and 108 correlated columns dropped in the all-subject fit). GazeMAE = 128 pos + 128 vel = 256-d; MOMENT-1-large = 1,024-d; raw = 5 × 120 = 600-d. Display resolutions span 1920×1080–3840×2160 and normalization is **per source recording** (some participants used more than one display); **94.7 %** of gaze samples fall inside `[0,1]^2`.
 - New file `tobii_experiments/make_paper_figures.py` regenerates both manuscript figures from the config + the descriptive-analysis projections: **Figure 1** (single column) = gaze-density map + engagement-rating distribution with per-participant mean ticks; **Figure 2** (double column) = 2×4 t-SNE grid, top row coloured by rating, bottom row by participant. `.gitignore` gained `!paper/figures/*.pdf` so the figure PDF is tracked despite the blanket `*.pdf` rule.
 - Interpretation follows the earlier ground rules: no significance tests, ranking reported as a descriptive tendency, GazeMAE's classifier-dependent result flagged as open, persistence kept in Results only with the labelling-artifact caveat, and the practical recommendation keeps the "still worth trying handcrafted features" nuance.
+
+## 17 — TeX semantic line formatting (2026-08-23)
+
+- Manuscript source under `paper/` uses one complete sentence per physical line; this is a whitespace-only source-formatting convention and does not change the rendered manuscript.
+- Workspace VS Code settings enable `editor.wordWrap` so long semantic lines remain visually wrapped while editing.
