@@ -1,0 +1,165 @@
+# Frozen final experiment for the IS SCAI 2026 preliminary paper.
+seed: 42
+run_id: null
+
+paths:
+  repo_root: ..
+  processed_root: null
+  features_csv: null
+  results_root: results/final_paper_experiment
+  subject_tree_root: ${TRUSTME_SUBJECT_ROOT}
+  subject_export_dir: tobii_coordinate_normalized
+  # Explicit list freezes the cohort even if new subject folders arrive.
+  subjects:
+    - Danyl_Yarmolenko
+    - Dario_Fenoglio
+    - Francesco_Bomba
+    - Gabriele_Dominici
+    - Lidia_Al
+    - Lidia_Losavio
+    - Martin_Gjoreski
+    - Yassine
+    - s_001_gs
+    - s_002_th
+    - s_003_za
+    - s_004_pk
+    - s_005_ak
+    - s_006_tb
+    - s_007_mz
+    - s_008_vd
+    - zhengtao_gao
+
+targets:
+  - name: engagement_level
+    mode: single_column
+    column: "5"
+
+experiment:
+  representations: [raw, features, embeddings]
+  allow_missing_features: false
+  model: random_forest
+  classifiers: [random_forest, mlp]
+
+label_rule:
+  mode: centered_subject_train_gt0
+  unseen_subject_center: global_train_mean
+  threshold: 3.0
+
+protocols:
+  enabled:
+    loso: false
+    loso_normalized: true
+    within_subject_temporal_split: false
+    rolling_window: false
+    hybrid_loso_adaptation: false
+    persistence_baseline: true
+    hmm_rolling: false
+  params:
+    temporal_split_ratio: 0.7
+    rolling_train_size: 120
+    rolling_test_size: 30
+    rolling_step_size: 15
+    hybrid_calibration_size: 130
+    hybrid_test_size: 30
+    hybrid_step_size: 15
+    persistence_calibration_size: 300
+    persistence_test_size: 90
+    persistence_step_size: 45
+    hmm_train_size: 300
+    hmm_test_size: 90
+    hmm_step_size: 45
+    hmm_n_states: 2
+    min_train_samples: 10
+    min_test_samples: 5
+
+evaluation:
+  one_class_policy: keep_with_nan
+  metrics: [accuracy, balanced_accuracy, macro_f1, auc]
+
+plotting:
+  enabled: false
+  confusion_top_k: 9
+
+outputs:
+  paper_only: true
+
+raw:
+  backend: subject_tree
+  csv_path: null
+  channels: [PupilSizeLeft, PupilSizeRight, GazePointX, GazePointY, AverageDistance]
+  resample_length: 120
+  length_mode: truncate_pad
+  flatten_length: 120
+  validity_gaze_columns: [ValidityLeft, ValidityRight]
+  validity_pupil_columns: [PupilValidityLeft, PupilValidityRight]
+  validity_valid_value: 1
+
+features:
+  structural_drop:
+    metadata_columns:
+      - "Unnamed: 0"
+      - Subject
+      - subject
+      - Filename
+      - source_file
+      - start_timestamp
+      - Path
+      - Label
+      - window_uid
+      - window_id
+      - window_id_str
+      - Time_start
+      - Time_end
+      - Index_start
+      - Index_end
+      - Win_len
+      - "Win len"
+      - "Overlap Percent"
+      - Fs
+      - "1"
+      - "2"
+      - "3"
+      - "4"
+      - "5"
+      - "6"
+      - "7"
+      - "8"
+      - "9"
+      - sleep_feedback
+      - prompt_id
+      - prompt_time
+  statistical_filter:
+    max_nan_fraction: 0.60
+    correlation_threshold: 0.80
+
+scaling:
+  use_standard_scaler: false
+
+models:
+  majority:
+    strategy: most_frequent
+  logistic_regression:
+    max_iter: 2000
+  lgbm:
+    n_jobs: -1
+    verbose: -1
+    force_col_wise: true
+  svm_rbf:
+    kernel: rbf
+    probability: true
+  mlp:
+    hidden_dims: [1028, 512, 256, 128, 64]
+    activation: gelu
+    use_layernorm: true
+    optimizer: adam
+    lr: 0.0002
+    weight_decay: 0.001
+    batch_size: 1024
+    max_epochs: 200
+    patience: 15
+    seed: 42
+  random_forest:
+    n_estimators: 300
+    class_weight: balanced
+    random_state: 42
+    n_jobs: -1

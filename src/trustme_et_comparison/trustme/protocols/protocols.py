@@ -37,6 +37,8 @@ def _nan_metrics_row() -> dict[str, float]:
     return {
         "baseline_accuracy": np.nan,
         "baseline_balanced_accuracy": np.nan,
+        "baseline_macro_f1": np.nan,
+        "baseline_auc": np.nan,
         "accuracy": np.nan,
         "balanced_accuracy": np.nan,
         "macro_f1": np.nan,
@@ -470,98 +472,112 @@ def run_persistence_baseline(
     values: np.ndarray,
     subjects: np.ndarray,
     subject_order: np.ndarray,
+    recordings: np.ndarray | None = None,
 ) -> ProtocolRunOutput:
-    """Run persistence baseline protocol (predict next window by last seen label)."""
+    """Run one-step persistence within continuous subject recordings."""
 
     rows: list[dict[str, Any]] = []
     predictions: list[dict[str, Any]] = []
 
     p = cfg.protocols.params
+    recordings_array = (
+        np.asarray(recordings, dtype=str)
+        if recordings is not None
+        else np.full(subjects.shape[0], "all_recordings", dtype=str)
+    )
     for subject in np.unique(subjects):
-        idx = np.where(subjects == subject)[0]
-        idx = idx[np.argsort(subject_order[idx])]
-        planned = 0
-        t_plan = p.persistence_calibration_size
-        while t_plan + p.persistence_test_size <= idx.shape[0]:
-            planned += 1
-            t_plan += p.persistence_step_size
-        print(
-            f"[FoldPlan] protocol=persistence_baseline target={target_name} repr={representation_name} "
-            f"subject={subject} folds={planned}",
-            flush=True,
-        )
-
-        t = p.persistence_calibration_size
-        fold_num = 0
-        while t + p.persistence_test_size <= idx.shape[0]:
-            fold_num += 1
-            train_idx = idx[:t]
-            test_idx = idx[t : t + p.persistence_test_size]
-
-            y_train, y_test, _, _ = centered_binary_train_test(
-                values=values,
-                subjects=subjects,
-                train_idx=train_idx,
-                test_idx=test_idx,
-                label_rule=cfg.label_rule,
+        subject_idx = np.where(subjects == subject)[0]
+        subject_recordings = recordings_array[subject_idx]
+        for recording_num, recording in enumerate(pd.unique(subject_recordings), start=1):
+            idx = subject_idx[subject_recordings == recording]
+            idx = idx[np.argsort(subject_order[idx])]
+            planned = 0
+            t_plan = p.persistence_calibration_size
+            while t_plan + p.persistence_test_size <= idx.shape[0]:
+                planned += 1
+                t_plan += p.persistence_step_size
+            print(
+                f"[FoldPlan] protocol=persistence_baseline target={target_name} repr={representation_name} "
+                f"subject={subject} recording={recording_num} folds={planned}",
+                flush=True,
             )
 
-            base = _build_row_base(
-                target_name=target_name,
-                representation=representation_name,
-                protocol="persistence_baseline",
-                fold_id=f"persist_{subject}_{fold_num}",
-                subject=str(subject),
-                n_train=train_idx.shape[0],
-                n_test=test_idx.shape[0],
-                train_pos_rate=float(np.mean(y_train)) if y_train.size else np.nan,
-                test_pos_rate=float(np.mean(y_test)) if y_test.size else np.nan,
-            )
+            t = p.persistence_calibration_size
+            fold_num = 0
+            while t + p.persistence_test_size <= idx.shape[0]:
+                fold_num += 1
+                train_idx = idx[:t]
+                test_idx = idx[t : t + p.persistence_test_size]
 
-            if y_train.shape[0] < p.min_train_samples or y_test.shape[0] < p.min_test_samples:
+                y_train, y_test, _, _ = centered_binary_train_test(
+                    values=values,
+                    subjects=subjects,
+                    train_idx=train_idx,
+                    test_idx=test_idx,
+                    label_rule=cfg.label_rule,
+                )
+
+                fold_id = f"persist_{subject}_{recording_num}_{fold_num}"
+                base = _build_row_base(
+                    target_name=target_name,
+                    representation=representation_name,
+                    protocol="persistence_baseline",
+                    fold_id=fold_id,
+                    subject=str(subject),
+                    n_train=train_idx.shape[0],
+                    n_test=test_idx.shape[0],
+                    train_pos_rate=float(np.mean(y_train)) if y_train.size else np.nan,
+                    test_pos_rate=float(np.mean(y_test)) if y_test.size else np.nan,
+                )
+
+                if y_train.shape[0] < p.min_train_samples or y_test.shape[0] < p.min_test_samples:
+                    rows.append(
+                        {
+                            **base,
+                            "status": "skipped",
+                            "skip_reason": "small_partition",
+                            **_nan_metrics_row(),
+                            **_hmm_meta_row(),
+                        }
+                    )
+                    t += p.persistence_step_size
+                    continue
+
+                # One-step persistence: at each test step, predict the most recently
+                # observed label. The first prediction uses the last calibration
+                # label; later predictions use the preceding observed test label.
+                y_pred = np.concatenate(
+                    [np.asarray([y_train[-1]], dtype=np.int64), y_test[:-1]]
+                )
+                eval_result = evaluate_binary_fold(
+                    y_train=y_train,
+                    y_test=y_test,
+                    y_pred=y_pred,
+                    y_proba=None,
+                    one_class_policy=cfg.evaluation.one_class_policy,
+                )
                 rows.append(
                     {
                         **base,
-                        "status": "skipped",
-                        "skip_reason": "small_partition",
-                        **_nan_metrics_row(),
+                        "status": eval_result.status,
+                        "skip_reason": eval_result.skip_reason,
+                        **eval_result.metrics,
                         **_hmm_meta_row(),
                     }
                 )
+                predictions.append(
+                    {
+                        "target": target_name,
+                        "representation": representation_name,
+                        "protocol": "persistence_baseline",
+                        "fold_id": fold_id,
+                        "subject": str(subject),
+                        "status": eval_result.status,
+                        "y_true": y_test,
+                        "y_pred": y_pred,
+                    }
+                )
                 t += p.persistence_step_size
-                continue
-
-            last_label = int(y_train[-1])
-            y_pred = np.full(shape=y_test.shape[0], fill_value=last_label, dtype=np.int64)
-            eval_result = evaluate_binary_fold(
-                y_train=y_train,
-                y_test=y_test,
-                y_pred=y_pred,
-                y_proba=None,
-                one_class_policy=cfg.evaluation.one_class_policy,
-            )
-            rows.append(
-                {
-                    **base,
-                    "status": eval_result.status,
-                    "skip_reason": eval_result.skip_reason,
-                    **eval_result.metrics,
-                    **_hmm_meta_row(),
-                }
-            )
-            predictions.append(
-                {
-                    "target": target_name,
-                    "representation": representation_name,
-                    "protocol": "persistence_baseline",
-                    "fold_id": f"persist_{subject}_{fold_num}",
-                    "subject": str(subject),
-                    "status": eval_result.status,
-                    "y_true": y_test,
-                    "y_pred": y_pred,
-                }
-            )
-            t += p.persistence_step_size
 
     return ProtocolRunOutput(rows=rows, predictions=predictions)
 

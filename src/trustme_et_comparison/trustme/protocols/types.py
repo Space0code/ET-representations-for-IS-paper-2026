@@ -14,9 +14,12 @@ class ZojaPathsConfig:
     """Filesystem locations for protocol runs."""
 
     repo_root: Path
-    processed_root: Path
+    processed_root: Path | None
     features_csv: Path | None
     results_root: Path
+    subject_tree_root: Path | None = None
+    subject_export_dir: str = "tobii"
+    subjects: list[str] | None = None
 
 
 @dataclass
@@ -118,3 +121,4 @@ class ZojaExperimentConfig:
     features: FeaturesConfig
     models: ModelsConfig
     use_standard_scaler: bool
+    paper_outputs_only: bool = False

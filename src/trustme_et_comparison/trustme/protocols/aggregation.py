@@ -11,6 +11,8 @@ SUBJECT_GROUP_COLS = ["target", "model", "representation", "protocol", "subject"
 METRIC_COLS = [
     "baseline_accuracy",
     "baseline_balanced_accuracy",
+    "baseline_macro_f1",
+    "baseline_auc",
     "accuracy",
     "balanced_accuracy",
     "macro_f1",
@@ -20,6 +22,21 @@ METRIC_COLS = [
     "gain",
     "balanced_gain",
 ]
+
+PAPER_REPRESENTATION_NAMES = {
+    "raw": "raw",
+    "features": "handcrafted features",
+    "embeddings_gazemae": "GazeMAE embeddings",
+    "embeddings_moment": "MOMENT embeddings",
+}
+
+PAPER_REPRESENTATION_ORDER = {
+    "majority baseline": 0,
+    "raw": 1,
+    "handcrafted features": 2,
+    "GazeMAE embeddings": 3,
+    "MOMENT embeddings": 4,
+}
 
 
 def build_subject_metrics(fold_df: pd.DataFrame) -> pd.DataFrame:
@@ -203,3 +220,112 @@ def add_subject_counts(summary_df: pd.DataFrame, subject_df: pd.DataFrame) -> pd
         .rename(columns={"subject": "n_subjects"})
     )
     return summary_df.merge(counts, on=GROUP_COLS, how="left")
+
+
+def _metric_summary(frame: pd.DataFrame, source: str, output: str) -> dict[str, float | int]:
+    """Return mean, sample SD, and available-fold count for one metric."""
+
+    values = pd.to_numeric(frame[source], errors="coerce")
+    return {
+        f"{output}_mean": float(values.mean()),
+        f"{output}_std": float(values.std(ddof=1)),
+        f"{output}_valid_folds": int(values.notna().sum()),
+    }
+
+
+def build_paper_main_results(fold_df: pd.DataFrame) -> pd.DataFrame:
+    """Build the concise Table 1 CSV from normalized LOSO fold metrics."""
+
+    work = fold_df[fold_df["protocol"] == "loso_normalized"].copy()
+    if work.empty:
+        return pd.DataFrame()
+
+    baseline_source = work.sort_values(["model", "representation"]).drop_duplicates("fold_id")
+    rows: list[dict[str, object]] = []
+    baseline_row: dict[str, object] = {
+        "target": str(baseline_source["target"].iloc[0]),
+        "representation": "majority baseline",
+        "model": "most_frequent",
+        "n_subjects": int(baseline_source["subject"].nunique()),
+        **_metric_summary(baseline_source, "baseline_accuracy", "accuracy"),
+        "accuracy_delta_mean": 0.0,
+        "accuracy_delta_std": 0.0,
+        "accuracy_delta_valid_folds": int(baseline_source["baseline_accuracy"].notna().sum()),
+        **_metric_summary(baseline_source, "baseline_balanced_accuracy", "balanced_accuracy"),
+        "balanced_accuracy_delta_mean": 0.0,
+        "balanced_accuracy_delta_std": 0.0,
+        "balanced_accuracy_delta_valid_folds": int(
+            baseline_source["baseline_balanced_accuracy"].notna().sum()
+        ),
+        **_metric_summary(baseline_source, "baseline_macro_f1", "macro_f1"),
+        **_metric_summary(baseline_source, "baseline_auc", "roc_auc"),
+    }
+    rows.append(baseline_row)
+
+    for (representation, model), frame in work.groupby(["representation", "model"], sort=False):
+        row: dict[str, object] = {
+            "target": str(frame["target"].iloc[0]),
+            "representation": PAPER_REPRESENTATION_NAMES.get(str(representation), str(representation)),
+            "model": str(model),
+            "n_subjects": int(frame["subject"].nunique()),
+            **_metric_summary(frame, "accuracy", "accuracy"),
+            **_metric_summary(frame, "gain", "accuracy_delta"),
+            **_metric_summary(frame, "balanced_accuracy", "balanced_accuracy"),
+            **_metric_summary(frame, "balanced_gain", "balanced_accuracy_delta"),
+            **_metric_summary(frame, "macro_f1", "macro_f1"),
+            **_metric_summary(frame, "auc", "roc_auc"),
+        }
+        rows.append(row)
+
+    result = pd.DataFrame(rows)
+    result["_representation_order"] = result["representation"].map(PAPER_REPRESENTATION_ORDER)
+    result["_model_order"] = result["model"].map(
+        {"most_frequent": 0, "random_forest": 1, "mlp": 2}
+    )
+    result.sort_values(["_representation_order", "_model_order"], inplace=True)
+    return result.drop(columns=["_representation_order", "_model_order"]).reset_index(drop=True)
+
+
+def build_paper_persistence_results(subject_df: pd.DataFrame) -> pd.DataFrame:
+    """Build the separate subject-macro persistence-check CSV."""
+
+    work = subject_df[subject_df["protocol"] == "persistence_baseline"].copy()
+    if work.empty:
+        return pd.DataFrame()
+    row: dict[str, object] = {
+        "target": str(work["target"].iloc[0]),
+        "protocol": "one_step_persistence",
+        "n_subjects": int(work["subject"].nunique()),
+        "n_temporal_folds": int(work["n_folds"].sum()),
+    }
+    for source, output in [
+        ("accuracy", "accuracy"),
+        ("gain", "accuracy_delta"),
+        ("balanced_accuracy", "balanced_accuracy"),
+        ("balanced_gain", "balanced_accuracy_delta"),
+        ("macro_f1", "macro_f1"),
+    ]:
+        summary = _metric_summary(work, source, output)
+        row.update(
+            {
+                key.replace("_valid_folds", "_valid_subjects"): value
+                for key, value in summary.items()
+            }
+        )
+    return pd.DataFrame([row])
+
+
+def build_cohort_results(metadata: pd.DataFrame) -> pd.DataFrame:
+    """Return per-subject and overall aligned-window counts for reporting."""
+
+    per_subject = (
+        metadata.groupby("Subject", sort=False)["segment_id"]
+        .nunique()
+        .rename("n_windows")
+        .reset_index()
+        .rename(columns={"Subject": "subject"})
+    )
+    total = pd.DataFrame(
+        [{"subject": "ALL", "n_windows": int(metadata["segment_id"].nunique())}]
+    )
+    return pd.concat([total, per_subject], ignore_index=True)

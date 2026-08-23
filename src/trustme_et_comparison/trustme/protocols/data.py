@@ -11,7 +11,10 @@ import pandas as pd
 
 from ...common.types import RepresentationDataset
 from ..data_loading import (
+    _apply_validity_masks,
     _normalize_window_id_value,
+    _resolve_raw_target_length,
+    _vectorize_window,
     build_variant_canonical_segments,
     load_embedding_payload,
     load_embeddings_representation,
@@ -43,6 +46,22 @@ class ProtocolDatasetBundle:
 
     metadata: pd.DataFrame
     representations: dict[str, RepresentationDataset]
+
+
+SUBJECT_TREE_FILENAMES = {
+    "raw": "tobii_raw_samples.csv",
+    "features": "tobii_features.csv",
+    "gazemae": "tobii_gazemae_embeddings.csv",
+    "moment": "tobii_moment_embeddings.csv",
+}
+
+SUBJECT_TREE_METADATA_COLUMNS = [
+    "window_uid",
+    "window_id",
+    "subject",
+    "source_file",
+    "start_timestamp",
+]
 
 
 def _resolve_time_column(frame: pd.DataFrame) -> str | None:
@@ -78,6 +97,8 @@ def build_protocol_canonical(
 
     rows: list[dict[str, object]] = []
 
+    if cfg.paths.processed_root is None:
+        raise ValueError("paths.processed_root is required for processed-parquet input.")
     subject_dirs = sorted(path for path in cfg.paths.processed_root.iterdir() if path.is_dir())
     if not subject_dirs:
         raise ValueError(f"No subject directories found under {cfg.paths.processed_root}")
@@ -245,3 +266,339 @@ def align_bundle_to_common_ids(
         aligned[name] = _subset_dataset(dataset, idx)
 
     return ProtocolDatasetBundle(metadata=canonical_common, representations=aligned)
+
+
+def _subject_tree_export_paths(cfg: ZojaExperimentConfig) -> dict[str, dict[str, Path]]:
+    """Resolve and strictly validate the frozen subject-tree cohort."""
+
+    root = cfg.paths.subject_tree_root
+    subjects = cfg.paths.subjects
+    if root is None or subjects is None:
+        raise ValueError("Subject-tree input requires paths.subject_tree_root and paths.subjects.")
+    if not root.is_dir():
+        raise ValueError(f"Subject-tree root is not a directory: {root}")
+
+    outputs: dict[str, dict[str, Path]] = {}
+    missing: list[str] = []
+    for subject in subjects:
+        export_dir = root / subject / "ml" / cfg.paths.subject_export_dir
+        files = {key: export_dir / filename for key, filename in SUBJECT_TREE_FILENAMES.items()}
+        absent = [path.name for path in files.values() if not path.is_file()]
+        if absent:
+            missing.append(f"{subject}: {', '.join(absent)}")
+        outputs[subject] = files
+    if missing:
+        raise ValueError("Missing frozen-cohort exports:\n  - " + "\n  - ".join(missing))
+    return outputs
+
+
+def _read_subject_tree_features(
+    cfg: ZojaExperimentConfig,
+    paths: dict[str, dict[str, Path]],
+    target_columns: list[str],
+) -> tuple[pd.DataFrame, RepresentationDataset]:
+    """Load canonical metadata and handcrafted-feature rows from subject exports."""
+
+    frames: list[pd.DataFrame] = []
+    for subject in cfg.paths.subjects or []:
+        path = paths[subject]["features"]
+        frame = pd.read_csv(path, low_memory=False)
+        required = {*SUBJECT_TREE_METADATA_COLUMNS, *target_columns}
+        missing = sorted(required - set(frame.columns))
+        if missing:
+            raise ValueError(f"Feature export {path} is missing columns: {missing}")
+        if frame["window_uid"].duplicated().any():
+            raise ValueError(f"Feature export contains duplicate window_uid values: {path}")
+        observed_subjects = set(frame["subject"].astype(str).unique())
+        if observed_subjects != {subject}:
+            raise ValueError(
+                f"Feature export subject mismatch for {path}: expected={subject}, observed={sorted(observed_subjects)}"
+            )
+        frames.append(frame)
+
+    features = pd.concat(frames, ignore_index=True).copy()
+    if features["window_uid"].duplicated().any():
+        raise ValueError("Feature exports contain duplicate window_uid values across subjects.")
+
+    features["_subject_order"] = pd.Categorical(
+        features["subject"],
+        categories=cfg.paths.subjects,
+        ordered=True,
+    )
+    features.sort_values(
+        ["_subject_order", "source_file", "start_timestamp", "window_id"],
+        kind="stable",
+        inplace=True,
+    )
+    features.reset_index(drop=True, inplace=True)
+
+    canonical = pd.DataFrame(
+        {
+            "segment_id": features["window_uid"].astype(str),
+            "Subject": features["subject"].astype(str),
+            "Label": features[target_columns[0]].astype(str),
+            "file_path": features["source_file"].astype(str),
+            "file_index": features.groupby("subject", sort=False)["source_file"].transform(
+                lambda values: pd.factorize(values, sort=False)[0]
+            ),
+            "window_order": features.groupby("subject", sort=False).cumcount(),
+            "start_ts": pd.to_numeric(features["start_timestamp"], errors="coerce"),
+        }
+    )
+    for column in target_columns:
+        canonical[column] = pd.to_numeric(features[column], errors="coerce")
+
+    feature_matrix = features.drop(columns=["_subject_order"])
+    ids = canonical["segment_id"].to_numpy(dtype=str)
+    subjects = canonical["Subject"].to_numpy(dtype=str)
+    labels = canonical["Label"].to_numpy(dtype=str)
+    dataset = RepresentationDataset(
+        name="features",
+        X=feature_matrix,
+        segment_ids=ids,
+        subjects=subjects,
+        source_labels=labels,
+    )
+    return canonical, dataset
+
+
+def _read_subject_tree_embedding(
+    *,
+    cfg: ZojaExperimentConfig,
+    paths: dict[str, dict[str, Path]],
+    key: str,
+    prefixes: tuple[str, ...],
+) -> RepresentationDataset:
+    """Load one window-level embedding family from frozen subject exports."""
+
+    ids_parts: list[np.ndarray] = []
+    matrix_parts: list[np.ndarray] = []
+    expected_columns: list[str] | None = None
+    for subject in cfg.paths.subjects or []:
+        path = paths[subject][key]
+        header = pd.read_csv(path, nrows=0).columns.tolist()
+        feature_columns = [
+            column for column in header if any(str(column).startswith(prefix) for prefix in prefixes)
+        ]
+        if not feature_columns:
+            raise ValueError(f"No {key} embedding columns found in {path}")
+        if expected_columns is None:
+            expected_columns = feature_columns
+        elif feature_columns != expected_columns:
+            raise ValueError(f"Inconsistent {key} embedding columns in {path}")
+
+        frame = pd.read_csv(path, usecols=["window_uid", *feature_columns], low_memory=False)
+        if frame["window_uid"].duplicated().any():
+            raise ValueError(f"Embedding export contains duplicate window_uid values: {path}")
+        ids_parts.append(frame["window_uid"].astype(str).to_numpy())
+        matrix_parts.append(frame[feature_columns].to_numpy(dtype=np.float32))
+
+    ids = np.concatenate(ids_parts)
+    if np.unique(ids).shape[0] != ids.shape[0]:
+        raise ValueError(f"{key} exports contain duplicate window_uid values across subjects.")
+    matrix = np.vstack(matrix_parts).astype(np.float32, copy=False)
+    subjects = np.asarray([value.split("|", 1)[0] for value in ids], dtype=str)
+    return RepresentationDataset(
+        name=f"embeddings_{key}",
+        X=matrix,
+        segment_ids=ids,
+        subjects=subjects,
+        source_labels=np.full(ids.shape[0], "", dtype=str),
+    )
+
+
+def _iter_raw_windows(path: Path, columns: list[str], chunksize: int = 250_000):
+    """Yield complete raw windows while preserving groups split across CSV chunks."""
+
+    carry = pd.DataFrame(columns=columns)
+    for chunk in pd.read_csv(path, usecols=columns, low_memory=False, chunksize=chunksize):
+        combined = pd.concat([carry, chunk], ignore_index=True) if not carry.empty else chunk
+        if combined.empty:
+            continue
+        last_id = str(combined["window_uid"].iloc[-1])
+        is_last = combined["window_uid"].astype(str) == last_id
+        ready = combined.loc[~is_last]
+        carry = combined.loc[is_last].copy()
+        for window_uid, window in ready.groupby("window_uid", sort=False):
+            yield str(window_uid), window.reset_index(drop=True)
+    if not carry.empty:
+        for window_uid, window in carry.groupby("window_uid", sort=False):
+            yield str(window_uid), window.reset_index(drop=True)
+
+
+def _fast_clean_truncate_pad(values: np.ndarray, target_len: int) -> np.ndarray:
+    """Linearly impute and truncate/pad one channel without pandas overhead."""
+
+    array = np.asarray(values, dtype=np.float32)
+    finite = np.isfinite(array)
+    if not finite.any():
+        return np.zeros(target_len, dtype=np.float32)
+    if not finite.all():
+        index = np.arange(array.shape[0], dtype=np.float32)
+        array = np.interp(index, index[finite], array[finite]).astype(np.float32)
+    if array.shape[0] >= target_len:
+        return array[:target_len].astype(np.float32, copy=False)
+    return np.pad(array, (0, target_len - array.shape[0]), mode="edge").astype(np.float32)
+
+
+def _fast_vectorize_subject_tree_window(
+    *,
+    window: pd.DataFrame,
+    channels: list[str],
+    gaze_channels: list[str],
+    pupil_channels: list[str],
+    validity_gaze: list[str],
+    validity_pupil: list[str],
+    valid_val: int,
+    target_len: int,
+) -> np.ndarray:
+    """Vectorize one fixed-length raw window with the standard validity policy."""
+
+    gaze_invalid = np.zeros(len(window), dtype=bool)
+    for column in validity_gaze:
+        gaze_invalid |= window[column].to_numpy() != valid_val
+    pupil_invalid = np.zeros(len(window), dtype=bool)
+    for column in validity_pupil:
+        pupil_invalid |= window[column].to_numpy() != valid_val
+
+    vectors: list[np.ndarray] = []
+    for channel in channels:
+        values = window[channel].to_numpy(dtype=np.float32, copy=True)
+        if channel in gaze_channels:
+            values[gaze_invalid] = np.nan
+        if channel in pupil_channels:
+            values[pupil_invalid] = np.nan
+        vectors.append(_fast_clean_truncate_pad(values, target_len))
+    return np.concatenate(vectors, axis=0)
+
+
+def _read_subject_tree_raw(
+    *,
+    cfg: ZojaExperimentConfig,
+    paths: dict[str, dict[str, Path]],
+    allowed_ids: set[str],
+) -> RepresentationDataset:
+    """Stream coordinate-normalized raw exports into fixed-width window vectors."""
+
+    channels = cfg.raw.channels
+    gaze_channels = [channel for channel in channels if "gaze" in channel.lower()]
+    pupil_channels = [channel for channel in channels if "pupil" in channel.lower()]
+    columns = list(
+        dict.fromkeys(
+            [
+                "window_uid",
+                *channels,
+                *cfg.raw.validity_gaze_columns,
+                *cfg.raw.validity_pupil_columns,
+            ]
+        )
+    )
+    target_len = _resolve_raw_target_length(cfg)
+    ids: list[str] = []
+    vectors: list[np.ndarray] = []
+    seen: set[str] = set()
+    for subject in cfg.paths.subjects or []:
+        path = paths[subject]["raw"]
+        header = set(pd.read_csv(path, nrows=0).columns)
+        missing = sorted(set(columns) - header)
+        if missing:
+            raise ValueError(f"Raw export {path} is missing columns: {missing}")
+        for window_uid, window in _iter_raw_windows(path, columns):
+            if window_uid not in allowed_ids:
+                continue
+            if window_uid in seen:
+                raise ValueError(f"Raw exports contain duplicate/non-contiguous window_uid: {window_uid}")
+            seen.add(window_uid)
+            ids.append(window_uid)
+            if cfg.raw.length_mode == "truncate_pad":
+                vectors.append(
+                    _fast_vectorize_subject_tree_window(
+                        window=window,
+                        channels=channels,
+                        gaze_channels=gaze_channels,
+                        pupil_channels=pupil_channels,
+                        validity_gaze=cfg.raw.validity_gaze_columns,
+                        validity_pupil=cfg.raw.validity_pupil_columns,
+                        valid_val=cfg.raw.validity_valid_value,
+                        target_len=target_len,
+                    )
+                )
+            else:
+                masked = _apply_validity_masks(
+                    window,
+                    gaze_channels=gaze_channels,
+                    pupil_channels=pupil_channels,
+                    validity_gaze=cfg.raw.validity_gaze_columns,
+                    validity_pupil=cfg.raw.validity_pupil_columns,
+                    valid_val=cfg.raw.validity_valid_value,
+                )
+                vectors.append(
+                    _vectorize_window(
+                        window=masked,
+                        channels=channels,
+                        target_len=target_len,
+                        length_mode=cfg.raw.length_mode,
+                    )
+                )
+
+    missing_ids = allowed_ids - seen
+    if missing_ids:
+        sample = sorted(missing_ids)[:5]
+        raise ValueError(f"Raw exports are missing {len(missing_ids)} common windows; sample={sample}")
+    ids_array = np.asarray(ids, dtype=str)
+    matrix = np.vstack(vectors).astype(np.float32, copy=False)
+    subjects = np.asarray([value.split("|", 1)[0] for value in ids_array], dtype=str)
+    return RepresentationDataset(
+        name="raw",
+        X=matrix,
+        segment_ids=ids_array,
+        subjects=subjects,
+        source_labels=np.full(ids_array.shape[0], "", dtype=str),
+    )
+
+
+def load_subject_tree_bundle(
+    cfg: ZojaExperimentConfig,
+    target_columns: list[str],
+) -> ProtocolDatasetBundle:
+    """Load and align the frozen coordinate-normalized subject-tree cohort."""
+
+    paths = _subject_tree_export_paths(cfg)
+    canonical, features = _read_subject_tree_features(cfg, paths, target_columns)
+    complete_target = np.ones(len(canonical), dtype=bool)
+    for column in target_columns:
+        complete_target &= pd.to_numeric(canonical[column], errors="coerce").notna().to_numpy()
+    target_idx = np.where(complete_target)[0].astype(np.int64)
+    canonical = canonical.iloc[target_idx].copy().reset_index(drop=True)
+    features = _subset_dataset(features, target_idx)
+    if canonical.empty:
+        raise ValueError("No labelled subject-tree windows remain for the configured target.")
+
+    representations: dict[str, RepresentationDataset] = {}
+    if "features" in cfg.representations:
+        representations["features"] = features
+    if "embeddings" in cfg.representations:
+        representations["embeddings_gazemae"] = _read_subject_tree_embedding(
+            cfg=cfg,
+            paths=paths,
+            key="gazemae",
+            prefixes=("z_pos_", "z_vel_"),
+        )
+        representations["embeddings_moment"] = _read_subject_tree_embedding(
+            cfg=cfg,
+            paths=paths,
+            key="moment",
+            prefixes=("moment_",),
+        )
+    if "raw" in cfg.representations:
+        common_ids = set(canonical["segment_id"].astype(str))
+        for dataset in representations.values():
+            common_ids &= set(dataset.segment_ids.astype(str))
+        representations["raw"] = _read_subject_tree_raw(
+            cfg=cfg,
+            paths=paths,
+            allowed_ids=common_ids,
+        )
+    if not representations:
+        raise ValueError("No subject-tree representations were requested.")
+    return align_bundle_to_common_ids(canonical=canonical, representations=representations)

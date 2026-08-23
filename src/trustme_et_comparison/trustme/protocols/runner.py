@@ -19,13 +19,21 @@ from ...common.utils import ensure_dir, make_run_id, save_yaml, set_global_seed
 from ...common.types import RepresentationDataset
 from .aggregation import (
     add_subject_counts,
+    build_cohort_results,
     build_method_comparison_tables,
+    build_paper_main_results,
+    build_paper_persistence_results,
     build_protocol_summary,
     build_representation_protocol_ranking,
     build_subject_metrics,
 )
 from .config import load_zoja_protocol_config
-from .data import align_bundle_to_common_ids, build_protocol_canonical, load_protocol_representations
+from .data import (
+    align_bundle_to_common_ids,
+    build_protocol_canonical,
+    load_protocol_representations,
+    load_subject_tree_bundle,
+)
 from .labels import build_target_values, centered_binary_full_for_diagnostics
 from .plotting import create_protocol_plots
 from .protocols import (
@@ -56,6 +64,8 @@ FOLD_TABLE_COLUMNS = [
     "skip_reason",
     "baseline_accuracy",
     "baseline_balanced_accuracy",
+    "baseline_macro_f1",
+    "baseline_auc",
     "accuracy",
     "balanced_accuracy",
     "macro_f1",
@@ -282,19 +292,6 @@ def _run_all_protocols_for_target_representation(
             ),
         )
 
-    if enabled.persistence_baseline:
-        _run_protocol(
-            "persistence_baseline",
-            lambda: run_persistence_baseline(
-                cfg=cfg,
-                target_name=target_name,
-                representation_name=representation_name,
-                values=values,
-                subjects=subjects,
-                subject_order=subject_order,
-            ),
-        )
-
     if enabled.hmm_rolling:
         _run_protocol(
             "hmm_rolling",
@@ -371,14 +368,18 @@ def run_zoja_protocols(config_path: str | Path) -> Path:
     run_id = make_run_id(cfg.run_id)
     run_root = ensure_dir(cfg.paths.results_root / run_id)
     tables_dir = ensure_dir(run_root / "tables")
-    _ = ensure_dir(run_root / "figures")
+    if cfg.plotting.enabled:
+        _ = ensure_dir(run_root / "figures")
 
     save_yaml(run_root / "config_snapshot.yaml", cfg)
 
     target_columns = _required_target_columns(cfg)
-    canonical = build_protocol_canonical(cfg, target_columns=target_columns)
-    loaded = load_protocol_representations(cfg, canonical)
-    bundle = align_bundle_to_common_ids(canonical=canonical, representations=loaded)
+    if cfg.paths.subject_tree_root is not None:
+        bundle = load_subject_tree_bundle(cfg, target_columns=target_columns)
+    else:
+        canonical = build_protocol_canonical(cfg, target_columns=target_columns)
+        loaded = load_protocol_representations(cfg, canonical)
+        bundle = align_bundle_to_common_ids(canonical=canonical, representations=loaded)
 
     metadata = bundle.metadata.copy()
     representations = bundle.representations
@@ -443,21 +444,60 @@ def run_zoja_protocols(config_path: str | Path) -> Path:
                 fold_rows.extend(out_rows)
                 predictions.extend(out_predictions)
 
+        if cfg.protocols.enabled.persistence_baseline:
+            print(f"[ProtocolStart] target={target.name} protocol=persistence_baseline", flush=True)
+            start = time.perf_counter()
+            persistence = run_persistence_baseline(
+                cfg=cfg,
+                target_name=target.name,
+                representation_name="label_history",
+                values=values,
+                subjects=subjects,
+                subject_order=subject_order,
+                recordings=metadata["file_path"].to_numpy(dtype=str),
+            )
+            for row in persistence.rows:
+                row["model"] = "persistence"
+            for pred in persistence.predictions:
+                pred["model"] = "persistence"
+            fold_rows.extend(persistence.rows)
+            predictions.extend(persistence.predictions)
+            print(
+                f"[ProtocolDone] target={target.name} protocol=persistence_baseline "
+                f"rows+={len(persistence.rows)} elapsed_s={time.perf_counter() - start:.1f}",
+                flush=True,
+            )
+
     fold_df = _ensure_fold_schema(pd.DataFrame(fold_rows))
     subject_df = build_subject_metrics(fold_df)
 
     summary_df = build_protocol_summary(fold_df=fold_df, subject_df=subject_df)
     summary_df = add_subject_counts(summary_df=summary_df, subject_df=subject_df)
 
-    gain_tbl, balanced_tbl = build_method_comparison_tables(subject_df=subject_df)
-    ranking_df = build_representation_protocol_ranking(summary_df=summary_df)
-
-    fold_df.to_csv(tables_dir / "protocol_fold_metrics.csv", index=False)
-    subject_df.to_csv(tables_dir / "protocol_subject_metrics.csv", index=False)
-    summary_df.to_csv(tables_dir / "protocol_summary.csv", index=False)
-    gain_tbl.to_csv(tables_dir / "method_comparison_gain.csv", index=False)
-    balanced_tbl.to_csv(tables_dir / "method_comparison_balanced_gain.csv", index=False)
-    ranking_df.to_csv(tables_dir / "representation_protocol_ranking.csv", index=False)
+    if cfg.paper_outputs_only:
+        main_results = build_paper_main_results(fold_df)
+        persistence_results = build_paper_persistence_results(subject_df)
+        cohort_results = build_cohort_results(metadata)
+        fold_df[fold_df["protocol"] == "loso_normalized"].to_csv(
+            tables_dir / "loso_fold_metrics.csv", index=False
+        )
+        if not persistence_results.empty:
+            fold_df[fold_df["protocol"] == "persistence_baseline"].to_csv(
+                tables_dir / "persistence_fold_metrics.csv", index=False
+            )
+            persistence_results.to_csv(tables_dir / "paper_persistence_result.csv", index=False)
+        main_results.to_csv(tables_dir / "paper_main_results.csv", index=False)
+        cohort_results.to_csv(tables_dir / "cohort_window_counts.csv", index=False)
+        ranking_df = pd.DataFrame()
+    else:
+        gain_tbl, balanced_tbl = build_method_comparison_tables(subject_df=subject_df)
+        ranking_df = build_representation_protocol_ranking(summary_df=summary_df)
+        fold_df.to_csv(tables_dir / "protocol_fold_metrics.csv", index=False)
+        subject_df.to_csv(tables_dir / "protocol_subject_metrics.csv", index=False)
+        summary_df.to_csv(tables_dir / "protocol_summary.csv", index=False)
+        gain_tbl.to_csv(tables_dir / "method_comparison_gain.csv", index=False)
+        balanced_tbl.to_csv(tables_dir / "method_comparison_balanced_gain.csv", index=False)
+        ranking_df.to_csv(tables_dir / "representation_protocol_ranking.csv", index=False)
 
     if cfg.plotting.enabled:
         create_protocol_plots(
@@ -470,14 +510,15 @@ def run_zoja_protocols(config_path: str | Path) -> Path:
             confusion_top_k=int(cfg.plotting.confusion_top_k),
         )
 
-    write_protocol_report(
-        output_path=run_root / "report.md",
-        fold_df=fold_df,
-        subject_df=subject_df,
-        summary_df=summary_df,
-        ranking_df=ranking_df,
-        run_scope=_scope_snapshot(cfg=cfg, metadata=metadata),
-    )
+    if not cfg.paper_outputs_only:
+        write_protocol_report(
+            output_path=run_root / "report.md",
+            fold_df=fold_df,
+            subject_df=subject_df,
+            summary_df=summary_df,
+            ranking_df=ranking_df,
+            run_scope=_scope_snapshot(cfg=cfg, metadata=metadata),
+        )
 
     print(
         "Completed TrustMe Tobii ET protocols: "

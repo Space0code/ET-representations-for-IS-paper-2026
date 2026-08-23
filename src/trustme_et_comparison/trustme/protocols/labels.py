@@ -63,12 +63,13 @@ def centered_binary_train_test(
 
     train_subjects = subjects[train_idx]
     test_subjects = subjects[test_idx]
-    global_mean = float(np.mean(train_values))
-
     subj_means: dict[str, float] = {}
     for subj in np.unique(train_subjects):
         subj_mask = train_subjects == subj
         subj_means[subj] = float(np.mean(train_values[subj_mask]))
+    # Weight participants equally, rather than weighting prolific participants
+    # by their number of windows.
+    global_mean = float(np.mean(list(subj_means.values())))
 
     centered_train = np.zeros_like(train_values, dtype=np.float32)
     for i, subj in enumerate(train_subjects):

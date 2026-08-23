@@ -172,8 +172,8 @@ def _parse_raw(cfg: dict[str, Any], repo_root: Path) -> RawConfig:
 
     raw_cfg = cfg["raw"]
     raw_backend = str(raw_cfg.get("backend", "parquet")).strip().lower()
-    if raw_backend not in {"parquet", "csv"}:
-        raise ValueError("raw.backend must be one of: ['parquet', 'csv'].")
+    if raw_backend not in {"parquet", "csv", "subject_tree"}:
+        raise ValueError("raw.backend must be one of: ['parquet', 'csv', 'subject_tree'].")
 
     raw_length_mode = str(raw_cfg.get("length_mode", "resample")).strip().lower()
     if raw_length_mode not in {"resample", "truncate_pad"}:
@@ -218,16 +218,54 @@ def load_zoja_protocol_config(config_path: str | Path) -> ZojaExperimentConfig:
 
     repo_root = _resolve_path(config_path.parent, cfg["paths"]["repo_root"])
 
-    features_csv_raw = cfg["paths"].get("features_csv")
+    paths_cfg = cfg["paths"]
+    features_csv_raw = paths_cfg.get("features_csv")
     if features_csv_raw is not None and not isinstance(features_csv_raw, str):
         raise ValueError("paths.features_csv must be a string path or null.")
 
+    processed_root_raw = paths_cfg.get("processed_root")
+    if processed_root_raw is not None and not isinstance(processed_root_raw, str):
+        raise ValueError("paths.processed_root must be a string path or null.")
+
+    subject_tree_root_raw = paths_cfg.get("subject_tree_root")
+    if subject_tree_root_raw is not None and not isinstance(subject_tree_root_raw, str):
+        raise ValueError("paths.subject_tree_root must be a string path or null.")
+    subject_export_dir = str(paths_cfg.get("subject_export_dir", "tobii"))
+    if Path(subject_export_dir).name != subject_export_dir:
+        raise ValueError("paths.subject_export_dir must be a directory name, not a path.")
+
+    raw_subjects = paths_cfg.get("subjects")
+    subjects = None
+    if raw_subjects is not None:
+        if not isinstance(raw_subjects, list) or not raw_subjects:
+            raise ValueError("paths.subjects must be a non-empty list when provided.")
+        subjects = [str(value) for value in raw_subjects]
+        if len(subjects) != len(set(subjects)):
+            raise ValueError("paths.subjects contains duplicate subject names.")
+
     paths = ZojaPathsConfig(
         repo_root=repo_root,
-        processed_root=_resolve_path(repo_root, cfg["paths"]["processed_root"]),
+        processed_root=(
+            _resolve_path(repo_root, processed_root_raw)
+            if processed_root_raw is not None
+            else None
+        ),
         features_csv=_resolve_path(repo_root, features_csv_raw) if features_csv_raw is not None else None,
-        results_root=_resolve_path(repo_root, cfg["paths"]["results_root"]),
+        results_root=_resolve_path(repo_root, paths_cfg["results_root"]),
+        subject_tree_root=(
+            _resolve_path(repo_root, subject_tree_root_raw)
+            if subject_tree_root_raw is not None
+            else None
+        ),
+        subject_export_dir=subject_export_dir,
+        subjects=subjects,
     )
+    if paths.subject_tree_root is None and paths.processed_root is None:
+        raise ValueError("One of paths.subject_tree_root or paths.processed_root is required.")
+    if paths.subject_tree_root is not None and paths.subjects is None:
+        raise ValueError(
+            "paths.subjects is required with paths.subject_tree_root so the experiment cohort is frozen."
+        )
 
     representations = [str(value) for value in cfg.get("experiment", {}).get("representations", ["raw"]) ]
     valid_representations = {"raw", "features", "embeddings"}
@@ -235,10 +273,14 @@ def load_zoja_protocol_config(config_path: str | Path) -> ZojaExperimentConfig:
     if unknown:
         raise ValueError(f"Unsupported representations requested: {unknown}.")
 
-    embedding_variants = _parse_embedding_variants(
-        cfg=cfg,
-        repo_root=repo_root,
-        representations=representations,
+    embedding_variants = (
+        []
+        if paths.subject_tree_root is not None
+        else _parse_embedding_variants(
+            cfg=cfg,
+            repo_root=repo_root,
+            representations=representations,
+        )
     )
 
     targets = _parse_targets(cfg.get("targets"))
@@ -283,7 +325,12 @@ def load_zoja_protocol_config(config_path: str | Path) -> ZojaExperimentConfig:
     protocols = _parse_protocols(cfg)
 
     allow_missing_features = bool(cfg.get("experiment", {}).get("allow_missing_features", False))
-    if "features" in representations and paths.features_csv is None and not allow_missing_features:
+    if (
+        "features" in representations
+        and paths.subject_tree_root is None
+        and paths.features_csv is None
+        and not allow_missing_features
+    ):
         raise ValueError(
             "Representation 'features' requested but paths.features_csv is null and allow_missing_features=false."
         )
@@ -328,4 +375,5 @@ def load_zoja_protocol_config(config_path: str | Path) -> ZojaExperimentConfig:
         features=_parse_features_cfg(cfg),
         models=_parse_models(cfg),
         use_standard_scaler=bool(cfg["scaling"]["use_standard_scaler"]),
+        paper_outputs_only=bool(cfg.get("outputs", {}).get("paper_only", False)),
     )

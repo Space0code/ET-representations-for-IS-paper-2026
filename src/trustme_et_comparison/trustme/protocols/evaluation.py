@@ -33,6 +33,8 @@ def _nan_metrics() -> dict[str, float]:
     return {
         "baseline_accuracy": np.nan,
         "baseline_balanced_accuracy": np.nan,
+        "baseline_macro_f1": np.nan,
+        "baseline_auc": np.nan,
         "accuracy": np.nan,
         "balanced_accuracy": np.nan,
         "macro_f1": np.nan,
@@ -88,6 +90,8 @@ def evaluate_binary_fold(
 
     if one_class_test:
         baseline_bacc = np.nan
+        baseline_macro_f1 = np.nan
+        baseline_auc = np.nan
         bacc = np.nan
         macro_f1 = np.nan
         precision = np.nan
@@ -95,8 +99,12 @@ def evaluate_binary_fold(
         auc = np.nan
     else:
         baseline_bacc = float(balanced_accuracy_score(y_test, y_pred_base))
+        baseline_macro_f1 = float(
+            f1_score(y_test, y_pred_base, average="macro", zero_division=0)
+        )
+        baseline_auc = 0.5
         bacc = float(balanced_accuracy_score(y_test, y_pred))
-        macro_f1 = float(f1_score(y_test, y_pred, average="binary", zero_division=0))
+        macro_f1 = float(f1_score(y_test, y_pred, average="macro", zero_division=0))
         precision = float(precision_score(y_test, y_pred, zero_division=0))
         recall = float(recall_score(y_test, y_pred, zero_division=0))
         auc = np.nan
@@ -121,6 +129,8 @@ def evaluate_binary_fold(
         metrics={
             "baseline_accuracy": baseline_acc,
             "baseline_balanced_accuracy": baseline_bacc,
+            "baseline_macro_f1": baseline_macro_f1,
+            "baseline_auc": baseline_auc,
             "accuracy": acc,
             "balanced_accuracy": bacc,
             "macro_f1": macro_f1,
