@@ -9,12 +9,12 @@
   \item q5 engagement item: ``How immersed in your work did you feel just now?''
   \item q5 response scale and observed raw-label distribution
   \item Window duration, overlap, temporal ordering
-  \item Common \texttt{window\_uid} intersection across all four representations
-  \item Labelled windows only; final subject and window counts
-  \item Validity fields; missing-value and quality-control policy
-  \item Display-resolution metadata; per-recording $x/y$ normalization to $[0,1]$
-  \item Out-of-screen coordinates: retained for modelling policy; excluded from descriptive heatmap
-  \item Representation order: raw, handcrafted features, GazeMAE embeddings, MOMENT embeddings
+  \item Common \texttt{window\_uid} intersection across all four representations (name it window ID in the paper and explain briefly what it is -- not literally the uid string, but what makes it unique)
+  \item Labelled windows only (with that we drop a lot of data (find the number how much data is retained, if you can't find it, calculate it from the data (with a simple script to save on tokens))); the reason to use only labelled windows is less data (more managable to actually run on PC in decent time) and easier problem, because this is a preliminary study on this new data; report final subject and window counts
+  \item Validity fields; missing-value and quality-control policy (very briefly, one sentence)
+  \item Display-resolution metadata -- mention it differs between subjects, but is constant within subject -- therefore we normalized it per-recording $x/y$ normalization to $[0,1]$ -- check if we truly normalized "per-recording" or if it was  "per-subject"
+  \item Out-of-screen coordinates: retained for modelling policy; excluded from descriptive heatmap (one sentence mention)
+  \item Representation order: raw, handcrafted features, GazeMAE embeddings, MOMENT embeddings (no need to mention this explicitly, just use it in this order always.)
   \item Raw: five channels, 120 samples per channel, truncate/pad policy, final dimensionality
   \item Handcrafted: feature families, metadata removal, missingness filtering, correlation filtering
   \item GazeMAE: checkpoint, inputs, embedding selection, dimensionality, frozen encoder
@@ -25,21 +25,19 @@
 \subsection{Experimental Design}
 
 \begin{itemize}
-  \item Primary task: binary q5 engagement inference
-  \item LOSO target construction: training-subject mean centring; held-out subject global-training-mean centring
-  \item Diagnostic visualization label only: raw q5; binary q5 above global processed-data median; no use in model training or metrics
+  \item Primary task: binary q5 engagement inference. We don't want to name it q5 in the paper. "q5" is for our internal reference. Let's come up with better name for the paper -- engagement level maybe?
+  \item In each LOSO fold, labels are mean-centred separately for each training participant; labels for the held-out participant are centred using the overall mean of the training participants
   \item Same aligned cohort, target definition, and folds across representations
   \item Majority-class baseline
-  \item Random Forest: 300 trees, balanced class weights, fixed seed
-  \item MLP: GELU, layer normalization, Adam, early stopping, fixed seed
+  \item Random Forest
+  \item MLP: GELU, layer normalization, Adam, early stopping
   \item Representation-by-model grid; robustness check rather than model-comparison claim
   \item Fold-local handcrafted-feature selection and imputation
   \item Fold-local median imputation; train-fit standardization; held-out-subject transform
-  \item No test-subject information in preprocessing parameters
   \item Accuracy: primary metric
-  \item Accuracy delta and balanced-accuracy delta: paired majority-baseline comparison within LOSO folds
+  \item Accuracy delta: paired majority-baseline comparison within LOSO folds
   \item Macro-F1 and ROC-AUC: secondary discrimination metrics
   \item Subject-macro aggregation
-  \item One-class test folds: retained accuracy; undefined balanced accuracy, macro-F1, and AUC; reported valid-fold counts
-  \item Persistence baseline: contextual within-subject temporal check; text only; not comparable with unseen-subject main table
+  \item One-class test folds: retained accuracy; 
+  \item Persistence baseline: contextual within-subject temporal check; text only; not comparable with unseen-subject main table; include as a minor note, do not emphasise
 \end{itemize}

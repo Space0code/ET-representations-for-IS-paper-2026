@@ -1,17 +1,30 @@
 \section{Results}
 
+% FINAL NUMERIC SOURCES (validated 2026-08-23; 17 subjects, seed 42):
+% Table 1:
+% results/final_paper_experiment/20260823_101436/tables/paper_main_results.csv
+% Separate persistence check:
+% results/final_paper_experiment/20260823_101436/tables/paper_persistence_result.csv
+% Audit/detail files (not the values to transcribe into the main paper table):
+% results/final_paper_experiment/20260823_101436/tables/loso_fold_metrics.csv
+% results/final_paper_experiment/20260823_101436/tables/persistence_fold_metrics.csv
+% results/final_paper_experiment/20260823_101436/tables/cohort_window_counts.csv
+% Do not use results/paper/table1_primary_loso_results_15_subject_snapshot.csv;
+% that file is the obsolete preliminary 15-subject snapshot.
+
 \begin{itemize}
-  \item \textbf{Table 1 --- primary LOSO results:} majority baseline; raw, handcrafted, GazeMAE, MOMENT; Random Forest and MLP
+  \item \textbf{Table 1 --- primary LOSO results:} majority baseline; raw, handcrafted, GazeMAE, MOMENT; Random Forest and MLP (rows are majority baseline in first row and then handcrafted one thicker row that splits to two normal rows one for RF and one for MLP and the same for other representations.)
   \item Table columns: representation; model; accuracy ($\Delta$ majority); balanced accuracy ($\Delta$ majority); macro-F1; ROC-AUC
   \item Table order: majority baseline; raw; handcrafted; GazeMAE; MOMENT
   \item Subject-macro estimates; valid-fold counts in caption or table note
   \item Bold: best value per metric; no overemphasis on small model differences
   \item Main result: highest accuracy; absolute and majority-baseline improvement
-  \item Representation result: raw and handcrafted performance relative to frozen GazeMAE and MOMENT embeddings
-  \item Model result: consistency of representation ranking across Random Forest and MLP
+  \item Representation result: raw relative to handcrafted performance  and relative to frozen GazeMAE and MOMENT embeddings
   \item One-class held-out-subject treatment; metric availability
   \item Persistence-check result: contextual temporal predictability; separate protocol; no direct ranking against LOSO models
   \item \textbf{Figure 2 --- selected projection:} one representation-method combination; raw q5 continuous colour scale
   \item Figure-selection criterion: clearest engagement gradient or clearest absence of label separation
   \item Figure interpretation: exploratory geometry; mixed colours as limited label separability; no causal or performance claim
 \end{itemize}
+
+Additional Note: We also want to include somewhere an image of the representations in PCA or t-SNE or UMAP plot. We have the plots already somewhere. The plots are intended to show the unusefulness of the embedding representations in our case. Because in the images it is nicely seen how random the dots are. If label = color, there is no clear separation. Also subject = color yields no nice separation.
