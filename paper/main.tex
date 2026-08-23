@@ -23,16 +23,36 @@
 
 \title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Office Workers}
 
-\author{\placeholder{Author name}}
+\author{Tomi Bo\v{z}ak}
 \affiliation{%
-  \institution{\placeholder{Institution}}
-  \city{\placeholder{City}}
-  \country{\placeholder{Country}}}
-\email{author@example.org}
-\renewcommand{\shortauthors}{\placeholder{Author surname} et al.}
+  \institution{Jo\v{z}ef Stefan Institute}
+  \city{Ljubljana}
+  \country{Slovenia}}
+\email{tb85088@student.uni-lj.si}
 
-% Write the abstract after the final experiment and result selection.
+\author{Ga\v{s}per Slapni\v{c}ar}
+\affiliation{%
+  \institution{Jo\v{z}ef Stefan Institute}
+  \city{Ljubljana}
+  \country{Slovenia}}
+\email{gasper.slapnicar@ijs.si}
+
+\renewcommand{\shortauthors}{Bo\v{z}ak and Slapni\v{c}ar}
+
 \begin{abstract}
+Eye tracking is an appealing sensor for inferring momentary user states at
+work, but before any model is trained a practitioner must decide how to
+represent a short gaze window. We compare four representation families -- raw
+multichannel signals, handcrafted ocular features, frozen GazeMAE embeddings
+and frozen MOMENT embeddings -- on identical three-second windows from an
+ongoing office-worker study, with self-reported momentary engagement as the
+target. All four are evaluated under leave-one-subject-out cross-validation
+with fold-local preprocessing with random forest classifier and an MLP and are compared against a majority baseline. Raw signals give the best unseen-participant performance (0.538
+accuracy, 0.014 above the baseline), handcrafted features follow closely, and
+neither frozen encoder improves on them. Absolute discrimination is weak
+throughout (best ROC-AUC 0.551) and between-participant variability dwarfs the
+differences between representations, so we report the ranking as preliminary,
+cost-aware guidance rather than a settled result.
 \end{abstract}
 
 \keywords{eye tracking, engagement inference, representation learning, GazeMAE, MOMENT, subject generalisation}
@@ -46,6 +66,7 @@
 \input{sections/05_conclusion}
 
 \begin{acks}
+\placeholder{funding, grant numbers and acknowledgements}
 \end{acks}
 
 \printbibliography

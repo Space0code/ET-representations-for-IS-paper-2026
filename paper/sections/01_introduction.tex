@@ -1,18 +1,46 @@
 \section{Introduction}
 
-\begin{itemize}
-  \item Engagement inference in office work from ET data
-  \item Eye tracking: gaze behaviour, pupil dynamics, behavioural evidence
-  \item Practical representation choice for eye-tracking windows
-  \item Raw temporal signals: information retention, high dimensionality
-  \item Handcrafted features: domain knowledge, interpretability, frequently used (cite one or two papers supporting it)
-  \item Learned embeddings: transfer promise, preprocessing and deployment cost
-  \item Gaze-specific GazeMAE; general time-series MOMENT
-  \item Evidence gap: like-for-like comparison on identical ET windows and labels for office workers
-  \item Unseen-person generalisation
-  \item Research question: representation reliability for self-reported engagement in unseen office workers
-  \item Controlled comparison: raw, handcrafted, GazeMAE, MOMENT
-  \item Frozen pretrained encoders; trained prediction head only
-  \item Contribution: leakage-safe LOSO evaluation
-  \item Contribution: practical representation-selection guidance
-\end{itemize}
+Interactive systems that adapt to the person using them need evidence about
+that person's momentary state. In knowledge work, engagement---how absorbed
+someone is in the task at hand---is an attractive target: it fluctuates within
+a working day, it is only weakly visible in application logs, and it is the
+state most directly tied to productivity and well-being interventions. Eye
+tracking is a plausible sensor for it. Gaze position, fixation and saccade
+dynamics, blinks and pupil size are available continuously from a
+screen-mounted tracker, require no action from the user, and have documented
+links to attention and processing load.
+
+Turning a stream of gaze samples into model input, however, forces a design
+decision that is rarely examined on its own. A short window of eye-tracking
+data can be presented to a classifier in at least four ways. The raw
+multichannel signal retains everything the tracker measured, at the price of
+high dimensionality and no structure. Handcrafted ocular features---fixation,
+saccade, blink and pupil statistics---encode decades of domain knowledge, stay
+interpretable, and remain the default choice in applied work
+\cite{bozak2024emotion,bozak2026workload}. Learned representations promise to
+remove the manual step: GazeMAE \cite{bautista2020gazemae} provides
+gaze-specific embeddings pretrained on eye-movement corpora, and
+general-purpose time-series foundation models such as MOMENT
+\cite{goswami2024moment} provide a frozen encoder intended to transfer to
+unseen domains. The four options differ substantially in preprocessing effort,
+storage and compute, and practitioners have little evidence on which to base
+the choice.
+
+That evidence gap exists because the families are seldom compared like for
+like. Published results differ in windows, labels, classifiers and, most
+consequentially, in validation protocol, so an apparent advantage of one
+representation can just as easily come from an optimistic split. What an
+applied designer needs is the comparison under the condition that matters for
+deployment: a model trained on some people and applied to a person it has
+never seen.
+
+We therefore ask which eye-tracking representation supports the most reliable
+inference of self-reported momentary engagement in unseen office workers. We
+answer with a controlled comparison of raw signals, handcrafted features,
+GazeMAE embeddings and MOMENT embeddings on identical three-second windows,
+an identical binary engagement target and identical leave-one-subject-out
+folds. Both pretrained encoders are kept frozen and only a prediction head is
+trained, which is the out-of-the-box setting a practitioner would try first.
+Our contributions are (i) a leakage-safe, subject-disjoint comparison of the
+four representation families on spontaneous office work, and (ii) cost-aware
+guidance for representation selection under limited labelled data.

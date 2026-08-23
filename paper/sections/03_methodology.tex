@@ -1,47 +1,118 @@
 \section{Methodology}
+\label{sec:method}
 
 \subsection{Data and Eye-Tracking Representations}
 
-\begin{itemize}
-  \item TrustMe project (Jo\v{z}ef Stefan Institute and Universit\`a della Svizzera italiana); ongoing multimodal office-worker study, \url{https://dis.ijs.si/trust-me/}
-  \item Modalities collected across the wider project: RGB camera, eye tracker, microphone, activity-watch/screen-activity logs; this paper uses the eye-tracking modality only
-  \item Recording protocol: each participant recorded during ordinary office work for a full workday, repeated over roughly three weeks
-  \item Experience-sampling method (ESM): participants prompted several times per day with a short self-report questionnaire covering engagement, emotions (valence/arousal), fatigue, stress, physical comfort, workplace interactions, sleep, and productivity
-  \item Dataset is still being collected and is not yet public; this is a preliminary study on the currently available cohort
-  \item Participant count, sessions, recording duration, sampling rate, exclusions
-  \item Tobii channels: left/right pupil size, gaze $x/y$, average distance
-  \item q5 engagement item: ``Right now I am immersed in my work.'' One of a three-item momentary engagement subscale asked at each prompt (alongside energy/vigor and job enthusiasm items)
-  \item q5 response scale and observed raw-label distribution
-  \item Window duration, overlap, temporal ordering
-  \item Common \texttt{window\_uid} intersection across all four representations (name it window ID in the paper and explain briefly what it is -- not literally the uid string, but what makes it unique)
-  \item Labelled windows only (with that we drop a lot of data (find the number how much data is retained, if you can't find it, calculate it from the data (with a simple script to save on tokens))); the reason to use only labelled windows is less data (more managable to actually run on PC in decent time) and easier problem, because this is a preliminary study on this new data; report final subject and window counts
-  \item Validity fields; missing-value and quality-control policy (very briefly, one sentence)
-  \item Display-resolution metadata -- mention it differs between subjects, but is constant within subject -- therefore we normalized it per-recording $x/y$ normalization to $[0,1]$ -- check if we truly normalized "per-recording" or if it was  "per-subject"
-  \item Out-of-screen coordinates: retained for modelling policy; excluded from descriptive heatmap (one sentence mention)
-  \item Representation order: raw, handcrafted features, GazeMAE embeddings, MOMENT embeddings (no need to mention this explicitly, just use it in this order always.)
-  \item Raw: five channels, 120 samples per channel, truncate/pad policy, final dimensionality
-  \item Handcrafted: feature families, metadata removal, missingness filtering, correlation filtering
-  \item GazeMAE: checkpoint, inputs, embedding selection, dimensionality, frozen encoder
-  \item MOMENT: checkpoint, inputs, pooling, dimensionality, frozen encoder
-  \item \textbf{Figure 1 --- normalized gaze-density map:} screen-coordinate coverage; recording-quality context; non-predictive descriptive evidence
-\end{itemize}
+The data come from an ongoing multimodal study in which office workers are
+recorded during ordinary work at their own workplace. The wider collection
+comprises an RGB camera, a screen-mounted eye tracker, a microphone and
+screen-activity logs; this paper uses the eye-tracking modality only. The
+dataset is neither complete nor public, so this is a preliminary study on the
+cohort available at the time of writing: 17 participants and 657 full-workday
+recordings, between 19 and 79 recordings per participant (median 32). The
+tracker samples at 60\,Hz, and we retain five channels: left and right pupil
+size, gaze $x$ and $y$, and the average eye--screen distance.
+
+Labels come from an experience-sampling protocol. Participants are prompted
+several times per working day with a short questionnaire covering engagement,
+affect, fatigue, stress, physical comfort, workplace interactions, sleep and
+productivity. Our target is the absorption item, \enquote{Right now I am
+immersed in my work}, one of three momentary engagement items answered at
+every prompt and rated on a seven-point scale from 0 to 6; we call it the
+\emph{engagement rating}. Each prompt labels the 15 minutes of recording that
+precede it, and only those intervals enter this study.
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{figures/fig1_descriptive.pdf}
+  \Description{Two panels: a heat map of gaze coordinates on the normalised
+  display, and a bar chart of the engagement-rating distribution.}
+  \caption{Descriptive context for the modelling cohort. (a) Gaze-coordinate
+  density on the normalised display, pooled over all on-screen samples.
+  (b) Distribution of the engagement rating over the 140{,}531 modelled
+  windows; the red ticks mark the 17 individual participant means, which span
+  2.2--4.9 and motivate the within-participant centring of the target.}
+  \label{fig:descriptive}
+\end{figure}
+
+Recordings are segmented into three-second windows with a 2.25-second step
+(25\,\% overlap). Every window carries an identifier built from the
+participant, the source recording and the position of the window inside that
+recording; the four representation exports are joined on this identifier, so
+all models see exactly the same windows. Windows with too little usable gaze
+are discarded before embedding (at least 30\,\% valid frames and at least 32
+valid frames), and remaining gaps inside a retained window are linearly
+interpolated. Of roughly 7.3 million recorded windows, only those inside a
+labelled interval are usable; 177{,}244 of them yield handcrafted features,
+157{,}685 also pass the encoder quality control, and 140{,}531 carry a numeric
+engagement rating. That final cohort---about 2\,\% of all recorded windows,
+and between 2{,}136 and 25{,}447 windows per participant---is what we model.
+Using labelled windows only discards a great deal of recorded data, but it
+keeps a preliminary experiment tractable and the target unambiguous.
+
+Display resolutions range from 1920$\times$1080 to 3840$\times$2160 pixels.
+They differ between participants and, for a few participants, between that
+person's own recordings, so gaze coordinates are normalised to $[0,1]$ using
+the resolution declared in each source recording rather than one value per
+participant.
+Out-of-screen coordinates are retained for modelling; 94.7\,\% of samples fall
+on the display, and only those enter the descriptive density map in
+Figure~\ref{fig:descriptive}(a), which shows the expected central
+concentration together with broad coverage of the screen.
+
+Four representations are computed from these windows. \textbf{Raw} keeps the
+five channels, truncates or pads each to 120 samples and flattens them into a
+600-dimensional vector. \textbf{Handcrafted features} start from 199 exported
+columns; 18 identifier, timestamp and questionnaire columns are removed
+structurally so that no survey metadata can leak into the model, leaving 181
+numeric candidates covering blink counts and durations, fixation and saccade
+statistics, pupil size and velocity moments, eye--screen distance statistics
+and per-channel missingness. \textbf{GazeMAE embeddings} come from the public
+micro--macro autoencoder checkpoints applied to gaze position and velocity
+resampled to 500\,Hz, with the 128-dimensional position and velocity codes
+concatenated into 256 dimensions \cite{bautista2020gazemae}. \textbf{MOMENT
+embeddings} come from the frozen \textsc{MOMENT-1-large} encoder applied to
+the same five channels with an input length of 512 and mean pooling, giving
+1{,}024 dimensions \cite{goswami2024moment}. Both encoders are used out of the
+box; no weights are updated.
 
 \subsection{Experimental Design}
 
-\begin{itemize}
-  \item Primary task: binary q5 engagement inference. We don't want to name it q5 in the paper. "q5" is for our internal reference. Let's come up with better name for the paper -- engagement level maybe?
-  \item In each LOSO fold, labels are mean-centred separately for each training participant; labels for the held-out participant are centred using the overall mean of the training participants
-  \item Same aligned cohort, target definition, and folds across representations
-  \item Majority-class baseline
-  \item Random Forest
-  \item MLP: GELU, layer normalization, Adam, early stopping
-  \item Representation-by-model grid; robustness check rather than model-comparison claim
-  \item Fold-local handcrafted-feature selection and imputation
-  \item Fold-local median imputation; train-fit standardization; held-out-subject transform
-  \item Accuracy: primary metric
-  \item Accuracy delta: paired majority-baseline comparison within LOSO folds
-  \item Macro-F1 and ROC-AUC: secondary discrimination metrics
-  \item Subject-macro aggregation
-  \item One-class test folds: retained accuracy; 
-  \item Persistence baseline: contextual within-subject temporal check; text only; not comparable with unseen-subject main table; include as a minor note, do not emphasise
-\end{itemize}
+Engagement ratings are strongly person-specific: the participant means span
+2.2 to 4.9 on the 0--6 scale (Figure~\ref{fig:descriptive}(b)). An
+absolute threshold would therefore mostly encode who the participant is rather
+than when they were engaged, so we binarise relative to each person's own
+level.
+Inside every fold, the ratings of each training participant are mean-centred
+separately, and the held-out participant's ratings are centred with the
+unweighted mean of the training participants' means; a window is positive when
+its centred rating exceeds zero. Over the cohort this gives 56.3\,\% positive
+windows, ranging from 33\,\% to 72\,\% per participant.
+
+The primary protocol is leave-one-subject-out cross-validation over the 17
+participants. Everything data-dependent is fitted inside the fold:
+handcrafted-feature filtering (dropping columns with more than 60\,\% missing
+values, zero variance, or absolute Pearson correlation above 0.8 with a
+retained column, which leaves 58--60 of the 181 candidates), median
+imputation, and standardisation are all estimated on the training participants
+and then applied unchanged to the held-out participant.
+
+Three predictors are run on every representation: a most-frequent baseline, a
+random forest (300 trees, balanced class weights) and an MLP
+(1028--512--256--128--64 units, GELU activations, layer normalisation, Adam
+with learning rate $2\times10^{-4}$ and weight decay $10^{-3}$, batch size
+1024, at most 200 epochs with early stopping after 15 epochs without
+improvement). A single seed (42) is used throughout. The
+representation~$\times$~model grid is a robustness check on the representation
+ranking rather than a model comparison.
+
+We report accuracy as the primary metric, together with its improvement over
+the baseline paired within folds, and balanced accuracy, macro-F1 and ROC-AUC
+as secondary discrimination measures; all are aggregated as unweighted means
+over participants. One participant rated every window below the training
+centre, so that test fold contains a single class: accuracy is defined for all
+17 folds and the remaining metrics for 16. As a contextual check we also run a
+one-step persistence predictor within recordings, carrying the last observed
+label forward in rolling blocks of 300 calibration and 90 test windows; it is
+a different, within-participant protocol and is not comparable with the main
+comparison.

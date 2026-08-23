@@ -26,3 +26,5 @@ outputs/
 *.pdf
 *.cut
 .DS_Store
+# Manuscript figures are build inputs, not results.
+!paper/figures/*.pdf
