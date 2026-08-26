@@ -19,8 +19,8 @@
 		Balanced accuracy is relative to 0.500 by construction.
 		Accuracy uses all 17 folds.
 		The remaining metrics use the 16 folds whose test participant is not single-class.
-		M-F1 is macro-F1 and AUC is ROC-AUC.
-		Best value per column in bold.}
+		M-F1 is macro-F1 and AUC is ROC-AUC\@.
+		Best predictive score and paired improvement in bold.}
 	\label{tab:main}
 	\setlength{\tabcolsep}{3.2pt}
 	\footnotesize
@@ -51,12 +51,14 @@
 
 Table~\ref{tab:main} reports the main comparison.
 Every representation--model combination sits close to the majority baseline.
-The best result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the paired baseline, and it is also best on balanced accuracy (0.536), macro-F1 (0.468) and ROC-AUC (0.551).
-Handcrafted features come next and improve on the baseline with both classifiers (up to 0.531 accuracy and 0.535 ROC-AUC).
-GazeMAE reaches 0.535 accuracy with the random forest and falls to 0.520, below the baseline, with the MLP.
-MOMENT is at or below the baseline on every metric, and its ROC-AUC (0.504) is indistinguishable from chance.
+The highest observed result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the paired baseline, and it is also highest on balanced accuracy (0.536), macro-F1 (0.468) and ROC-AUC (0.551).
+Handcrafted features give the next-highest balanced accuracy, macro-F1 and ROC-AUC, and improve on the baseline accuracy with both classifiers.
+GazeMAE reaches 0.535 accuracy with the random forest and falls to 0.520, below the baseline, with the MLP\@.
+MOMENT falls below the baseline accuracy with both classifiers, while its balanced accuracy and ROC-AUC remain close to chance.
 
-Across all four metrics, the ordering is raw $\geq$ handcrafted $>$ GazeMAE $>$ MOMENT, but the absolute accuracy differences of 0.003 to 0.017 are much smaller than the spread across held-out participants, whose accuracy standard deviations range from 0.11 to 0.29.
+Raw signals give the highest value on every metric.
+Handcrafted features rank second on the three secondary discrimination metrics, while GazeMAE has the second-highest accuracy.
+The paired accuracy changes range from $-0.017$ to $+0.014$, much less than the spread across held-out participants, whose accuracy standard deviations range from 0.11 to 0.29.
 The MLP improves raw and handcrafted inputs but lowers both embedding results.
 A flexible head may help when a representation already carries useful signal.
 The effect is small, so this interpretation remains tentative.
@@ -74,9 +76,10 @@ Figure~\ref{fig:tsne} shows the same difficulty geometrically.
 In the t-SNE projections, none of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
 Colouring the identical projections by participant is more informative.
 Raw signals form clear participant-dominated patches, handcrafted features and GazeMAE group more weakly, and the MOMENT projection is close to uniform.
-Most of the structure these representations expose is therefore person-specific, and the frozen encoders appear to smooth it away.
-Because the projections are exploratory, their link to the ranking in Table~\ref{tab:main} remains a conjecture.
+The clearest visible structure is therefore person-specific, and the weaker grouping in the frozen embeddings may reflect smoothing by the encoders.
+Because the projections are exploratory, this interpretation and its link to Table~\ref{tab:main} remain conjectures.
 
-As a check on the label series, a one-step persistence predictor applied within recordings reaches 0.999 accuracy, 0.960 balanced accuracy and 0.965 macro-F1 over 1{,}434 temporal blocks.
+As a check on the label series, a one-step persistence predictor is evaluated over 1{,}434 temporal blocks.
+Participant-averaged accuracy reaches 0.999, while balanced accuracy reaches 0.960 and macro-F1 reaches 0.965 over the 13 participants with two-class test blocks.
 Each questionnaire answer is broadcast unchanged to every window of the preceding 15-minute interval (Section~\ref{sec:method}), so most consecutive window pairs share a label by construction.
 Because the predictor uses observed labels within participants, its result cannot be compared directly with the unseen-participant results above.

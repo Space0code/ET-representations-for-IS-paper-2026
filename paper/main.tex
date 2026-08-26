@@ -43,9 +43,9 @@
 	Eye tracking is an appealing sensor for inferring momentary user states at work.
 	Before training a model, a practitioner must decide how to represent a short gaze window.
 	We compare four representation families on identical three-second windows from an ongoing office-worker study: raw multichannel signals, handcrafted ocular features, frozen GazeMAE embeddings and frozen MOMENT embeddings.
-	The target is self-reported momentary engagement.
+	The target is a single self-reported item measuring momentary absorption.
 	All four are evaluated under leave-one-subject-out cross-validation with fold-local preprocessing, using a random forest classifier and an MLP against a majority baseline.
-	Raw signals give the best unseen-participant performance (0.538 accuracy, 0.014 above the baseline), handcrafted features follow closely, and neither frozen encoder improves on them.
+	Raw signals give the highest observed unseen-participant performance (0.538 accuracy, 0.014 above the baseline), handcrafted features follow closely overall, and neither frozen encoder improves on the raw signal.
 	Absolute discrimination is weak throughout (best ROC-AUC 0.551) and between-participant variability dwarfs the differences between representations, so we report the ranking as preliminary, cost-aware guidance.
 \end{abstract}
 
@@ -60,14 +60,14 @@
 \input{sections/05_conclusion}
 
 \begin{acks}
-This work was supported by bilateral Weave project, funded by
+This work was supported by the bilateral Weave project, funded by
 the Slovenian Agency of Research and Innovation (ARIS) under
 grant agreement N1-0319 and by the Swiss National Science
 Foundation (SNSF) under grant agreement 214991.
 
-The authors acknowledge the use of OpenAI’s Codex 5.6 Sol and Anthropic's Claude Code Opus 5 for generating text suggestions during the preparation of this paper.
-All the generated content has been reviewed and edited by the authors to ensure accuracy and relevance to the research.
-Authors take full responsibility for the contents of the paper.
+The authors acknowledge the use of OpenAI Codex with GPT-5.6 Sol and Anthropic Claude Code with Claude Opus 5 for generating text suggestions during the preparation of this paper.
+The authors reviewed and edited all suggestions to ensure their accuracy and relevance to the research.
+The authors take full responsibility for the contents of the paper.
 
 \end{acks}
 

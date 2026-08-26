@@ -8,7 +8,14 @@ from pathlib import Path
 import pandas as pd
 
 from .config import load_analysis_config
-from .data import load_representation, project_matrix, read_sampled_table, read_table, sample_rows
+from .data import (
+    load_representation,
+    load_representation_ids,
+    project_matrix,
+    read_sampled_table,
+    read_table,
+    sample_rows,
+)
 from .plotting import (
     plot_class_distribution,
     plot_gaze_density,
@@ -87,13 +94,20 @@ def run_analysis(config_path: str | Path) -> Path:
                 plot_gaze_density(raw, config.gaze_columns, raw_output_dir / "descriptive")
             )
 
-    sampled_metadata = sample_rows(metadata, config.max_projection_points, config.random_state)
+    common_ids = set(metadata[config.metadata.id_column])
+    for representation in config.representations:
+        common_ids &= load_representation_ids(representation, allowed_ids=common_ids)
+    common_metadata = metadata[metadata[config.metadata.id_column].isin(common_ids)].copy()
+    sampled_metadata = sample_rows(common_metadata, config.max_projection_points, config.random_state)
     allowed_ids = set(sampled_metadata[config.metadata.id_column].astype(str))
     for representation in config.representations:
         ids, matrix = load_representation(representation, allowed_ids=allowed_ids)
         index_frame = pd.DataFrame({config.metadata.id_column: ids, "matrix_index": range(len(ids))})
-        joined = index_frame.merge(metadata, on=config.metadata.id_column, how="inner")
-        joined = sample_rows(joined, config.max_projection_points, config.random_state)
+        joined = index_frame.merge(sampled_metadata, on=config.metadata.id_column, how="inner")
+        if len(joined) != len(sampled_metadata):
+            raise ValueError(
+                f"Representation {representation.name!r} is missing sampled common windows."
+            )
         selected_matrix = matrix[joined["matrix_index"].to_numpy()]
         for method in config.methods:
             coordinates = project_matrix(selected_matrix, method, config.random_state)
@@ -129,6 +143,8 @@ def run_analysis(config_path: str | Path) -> Path:
         "subjects": list(config.subjects),
         "subject_count": len(config.subjects) or metadata[config.subject_column].nunique(),
         "metadata_windows": len(metadata),
+        "common_representation_windows": len(common_metadata),
+        "projection_windows": len(sampled_metadata),
         "raw_target_column": target_column,
         "global_median": global_median,
         "binary_target_definition": f"{target_column} > {global_median}",

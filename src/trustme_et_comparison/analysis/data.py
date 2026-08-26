@@ -188,6 +188,46 @@ def load_representation(
     return ids, matrix.astype(np.float32, copy=False)
 
 
+def load_representation_ids(
+    config: RepresentationConfig,
+    allowed_ids: set[str] | None = None,
+) -> set[str]:
+    """Load only the available window IDs for one representation."""
+
+    paths = _input_paths(config)
+    ids: set[str] = set()
+    if len(paths) == 1 and paths[0].suffix.lower() == ".npz":
+        with np.load(paths[0], allow_pickle=False) as payload:
+            if config.id_key not in payload:
+                raise ValueError(f"{paths[0]} must contain {config.id_key!r}.")
+            values = np.asarray(payload[config.id_key]).astype(str)
+            ids.update(values.tolist())
+    else:
+        for path in paths:
+            suffix = path.suffix.lower()
+            if suffix in {".csv", ".tsv"}:
+                separator = "\t" if suffix == ".tsv" else ","
+                chunks = pd.read_csv(
+                    path,
+                    usecols=[config.id_column],
+                    sep=separator,
+                    low_memory=False,
+                    chunksize=100_000,
+                )
+                for chunk in chunks:
+                    values = chunk[config.id_column].astype(str)
+                    if allowed_ids is not None:
+                        values = values[values.isin(allowed_ids)]
+                    ids.update(values.tolist())
+            else:
+                frame = _read_one_table(path, [config.id_column])
+                values = frame[config.id_column].astype(str)
+                if allowed_ids is not None:
+                    values = values[values.isin(allowed_ids)]
+                ids.update(values.tolist())
+    return ids if allowed_ids is None else ids & allowed_ids
+
+
 def project_matrix(matrix: np.ndarray, method: str, random_state: int) -> np.ndarray:
     """Impute, standardize, and project a representation to two dimensions."""
 
