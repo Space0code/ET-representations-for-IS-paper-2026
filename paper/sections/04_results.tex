@@ -19,7 +19,7 @@
 		Balanced accuracy is relative to 0.500 by construction.
 		Accuracy uses all 17 folds.
 		The remaining metrics use the 16 folds whose test participant is not single-class.
-		M-F1 is macro-F1.
+		M-F1 is macro-F1 and AUC is ROC-AUC.
 		Best value per column in bold.}
 	\label{tab:main}
 	\setlength{\tabcolsep}{3.2pt}
@@ -52,9 +52,9 @@
 Table~\ref{tab:main} reports the main comparison.
 Every representation--model combination sits close to the majority baseline.
 The best result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the paired baseline, and it is also best on balanced accuracy (0.536), macro-F1 (0.468) and ROC-AUC (0.551).
-Handcrafted features come next and improve on the baseline with both classifiers (up to 0.531 accuracy and 0.535 AUC).
+Handcrafted features come next and improve on the baseline with both classifiers (up to 0.531 accuracy and 0.535 ROC-AUC).
 GazeMAE reaches 0.535 accuracy with the random forest and falls to 0.520, below the baseline, with the MLP.
-MOMENT is at or below the baseline on every metric, and its AUC (0.504) is indistinguishable from chance.
+MOMENT is at or below the baseline on every metric, and its ROC-AUC (0.504) is indistinguishable from chance.
 
 Across all four metrics, the ordering is raw $\geq$ handcrafted $>$ GazeMAE $>$ MOMENT, but the absolute accuracy differences of 0.003 to 0.017 are much smaller than the spread across held-out participants, whose accuracy standard deviations range from 0.11 to 0.29.
 The MLP improves raw and handcrafted inputs but lowers both embedding results.
@@ -66,15 +66,16 @@ The effect is small, so this interpretation remains tentative.
 	\includegraphics[width=\textwidth]{figures/fig2_tsne.png}
 	\Description{Eight scatter plots arranged in two rows of four, showing t-SNE projections of the four representations coloured by engagement rating and by participant.}
 	\caption{t-SNE projections of the four representations over a common sample of 5{,}000 windows, coloured by engagement rating (top) and by participant (bottom).
-		The projections show exploratory geometry and should not be interpreted as evidence of separability under a trained classifier. (the last sentence is too much general. make a better claim, different. such as: we can observe by eye that the data is quite subject-specific based on the raw t-sne plot colored per subject. implying difficult data and justifying to some extent that the raw representation works best because other representations seem to smooth out the noise. comment: we do not need to say all these ideas in the figure caption. you can put some to the main text in appropriate place. of course, make the wording better.)}
+		Participant colours form visible patches in the raw projection and mix almost uniformly in the MOMENT projection, while no projection shows regions that follow the engagement rating.}
 	\label{fig:tsne}
 \end{figure*}
 
-Figure~\ref{fig:tsne} gives a geometric view of the same difficulty.
-In two-dimensional t-SNE projections, none of the four representations arranges windows by engagement rating.
-The colours are mixed everywhere, in the learned embeddings as much as in the raw signal.
-Colouring the identical projections by participant reveals some local grouping for raw signals and GazeMAE.
-This suggests that part of the structure captured by these representations is person-specific.
+Figure~\ref{fig:tsne} shows the same difficulty geometrically.
+In the t-SNE projections, none of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
+Colouring the identical projections by participant is more informative.
+Raw signals form clear participant-dominated patches, handcrafted features and GazeMAE group more weakly, and the MOMENT projection is close to uniform.
+Most of the structure these representations expose is therefore person-specific, and the frozen encoders appear to smooth it away.
+Because the projections are exploratory, their link to the ranking in Table~\ref{tab:main} remains a conjecture.
 
 As a check on the label series, a one-step persistence predictor applied within recordings reaches 0.999 accuracy, 0.960 balanced accuracy and 0.965 macro-F1 over 1{,}434 temporal blocks.
 Each questionnaire answer is broadcast unchanged to every window of the preceding 15-minute interval (Section~\ref{sec:method}), so most consecutive window pairs share a label by construction.

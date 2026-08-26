@@ -25,12 +25,12 @@ Each prompt labels the 15 minutes of recording that precede it, and only those i
 		(b) Distribution of the engagement rating over the 140{,}531 modelled windows.
 		The red ticks mark the 17 individual participant means, which span 2.2--4.9 and motivate the within-participant centring of the target.}
 	\label{fig:descriptive}
-\end{figure} (change the color of the heatmap to blue-red and for the consistency, use the same blue and red in the histogram if possible (not strictly mandatory))
+\end{figure}
 
 Recordings are segmented into three-second windows with a 2.25-second step (25\,\% overlap).
 Every window carries an identifier built from the participant, the source recording and the position of the window inside that recording.
 The four representation exports are joined on this identifier, so all models see exactly the same windows.
-Windows with too little usable gaze are discarded before embedding (at least 30\,\% valid frames and at least 32 valid frames), and remaining gaps inside a retained window are linearly interpolated.
+A window is kept only when at least 30\,\% of its frames are valid and at least 32 valid frames remain, and gaps inside a retained window are linearly interpolated.
 Of roughly 7.3 million recorded windows, only those inside a labelled interval have an unambiguous target and are usable.
 Handcrafted features are available for 177{,}244 of them, 157{,}685 also pass the encoder quality control, and 140{,}531 carry a numeric engagement rating.
 The final modelling cohort accounts for about 2\,\% of all recorded windows and contains between 2{,}136 and 25{,}447 windows per participant.
@@ -41,14 +41,18 @@ Out-of-screen coordinates are retained for modelling.
 Overall, 94.7\,\% of samples fall on the display, and only those enter the descriptive density map in Figure~\ref{fig:descriptive}(a), which shows the expected central concentration together with broad coverage of the screen.
 
 Four representations are computed from these windows.
-(1) \textbf{Raw} keeps the five channels, truncating longer windows to 120 samples and padding shorter ones with their final value before flattening them into a 600-dimensional vector.
-(2) \textbf{Handcrafted features} start from 199 exported columns. (here, we should start by a short simple explanation of how we created the handcrafted features and what groups we have. the current statement is just weird.)
-We remove 18 identifier, timestamp and questionnaire columns so that survey metadata cannot leak into the model, leaving 181 numeric candidates covering blink counts and durations, fixation and saccade statistics, pupil size and velocity moments, eye--screen distance statistics and per-channel missingness. (we don't want to explain what we "remove". if we remove something we didn't even need in the first place we don't even want to mention we created it and then removed it. if we removed something like an ID, we should simply mention we didn't use that in the training)
+(1) \textbf{Raw signals} keep the five channels, truncating longer windows to 120 samples and padding shorter ones with their final value before flattening them into a 600-dimensional vector.
+(2) \textbf{Handcrafted features} describe a window through the ocular events and signals it contains.
+Blinks, fixations and saccades are taken from the tracker's event classification, and each event type contributes counts, rates and duration statistics, together with the location and dispersion of fixations and the amplitude and velocity of saccades.
+The remaining groups summarise pupil size and its rate of change, the eye--screen distance and its dynamics, and the fraction of missing samples in each channel.
+This gives 181 numeric features per window, which are filtered inside each fold as described in Section~\ref{subsec:design}.
+Window identifiers, timestamps and questionnaire columns travel with the export and are not used as model input.
 (3) \textbf{GazeMAE embeddings} are computed with the public micro--macro autoencoder checkpoints applied to gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
 (4) \textbf{MOMENT embeddings} are calculated with the frozen \textsc{MOMENT-1-large} encoder applied to the same five channels with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
 Both encoders are used out of the box with no weight updates.
 
 \subsection{Experimental Design}
+\label{subsec:design}
 
 Engagement ratings are strongly person-specific, with participant means spanning 2.2 to 4.9 on the 0--6 scale (Figure~\ref{fig:descriptive}(b)).
 An absolute threshold would therefore mostly encode participant identity.
@@ -62,7 +66,7 @@ Everything data-dependent is fitted inside the fold.
 Handcrafted-feature filtering, median imputation and standardisation are estimated on the training participants and then applied with unchanged parameters to the held-out participant.
 The filtering drops columns with more than 60\,\% missing values, zero variance, or absolute Pearson correlation above 0.8 with a retained column, leaving 58--60 of the 181 feature candidates.
 
-Three predictors are run on every representation: a most-frequent baseline, a random forest (300 trees, balanced class weights) and an MLP (1028--512--256--128--64 units, GELU activations, layer normalisation, Adam with learning rate $2\times10^{-4}$ and weight decay $10^{-3}$, batch size 1024, at most 200 epochs with early stopping after 15 epochs without improvement). (use consistent terminology. replace most-frequent baseline with majority baseline here. also check other terminology for consistency. if you are unsure for some word, ask me.)
+Three predictors are run on every representation: a majority baseline, a random forest (300 trees, balanced class weights) and an MLP (1028--512--256--128--64 units, GELU activations, layer normalisation, Adam with learning rate $2\times10^{-4}$ and weight decay $10^{-3}$, batch size 1024, at most 200 epochs with early stopping after 15 epochs without improvement).
 A single seed is used throughout.
 The representation~$\times$~model grid checks whether the representation ranking is robust across models.
 

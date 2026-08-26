@@ -1,30 +1,30 @@
 \section{Discussion}
 
-On this data, the raw multichannel window is the most informative of the four representations for binary engagement inference in unseen office workers, with handcrafted features close behind and no improvement from the two frozen embeddings.
+On this dataset, raw signals are the most informative of the four representations for binary engagement inference in unseen office workers, with handcrafted features close behind and no improvement from the two frozen embeddings.
 The small margins over the majority baseline show that three seconds of gaze does not make momentary self-reported engagement well predictable across people, whichever representation is used.
-Representation differences are modest but more consistent than classifier effects. (weird sentence, make it easier and clearer.)
+The differences between representations are small, but they point the same way for both classifiers, while changing the classifier helps some representations and hurts others.
 
-The failure of the frozen encoders to improve on simpler inputs is best read as a mismatch between pretraining and task. (i don't like the wording "best read". change to simpler language. or maybe "interpreted" or "we interpret".)
+We interpret the failure of the frozen encoders to improve on simpler inputs as a mismatch between their pretraining data and this task.
 GazeMAE was pretrained on controlled stimulus-viewing corpora and MOMENT on generic time-series benchmarks.
 Neither has seen day-long, spontaneous office gaze with its dropouts, idle stretches and heterogeneous displays.
-These out-of-the-box results concern frozen transfer in this setting and leave adapted representation learning open.
-Domain adaptation or fine-tuning on in-domain gaze is the natural next step, especially for GazeMAE given its classifier-dependent behaviour (Section~\ref{sec:results}). (make the sentence simpler, more readable.)
+These results concern frozen transfer only.
+The next step is to fine-tune the encoders on office gaze, starting with GazeMAE, whose result depended on the classifier (Section~\ref{sec:results}).
 
-For practice, raw signals are the empirical winner and the cheapest option: no feature engineering, no pretrained checkpoint, no GPU inference pass, and 600 dimensions against MOMENT's 1{,}024.
+For practice, raw signals scored best here and are also the cheapest option: no feature engineering, no pretrained checkpoint, no GPU inference pass, and 600 dimensions against MOMENT's 1{,}024.
 Handcrafted features should still be considered.
 They finished a close second, they remain interpretable, and our earlier feature-based analyses found them effective on related eye-tracking targets \cite{bozak2024emotion,bozak2026workload}, so they are still worth trying on a similar problem.
-The results give little reason to choose a frozen general-purpose encoder by default. (in general make the paper less "artisticly written" regarding the wording. mostly it is fine, but this sentence for example "give little reason to" and some other similar cases make it look like i want to write a book. but no. we are writing a SCI paper, not a fiction book.)
+Our results do not support a frozen general-purpose encoder as the default choice.
 
 Several limitations bound these conclusions.
 The study uses one unpublished and still-growing dataset with 17 participants.
 The target is a noisy self-report assigned retrospectively to a 15-minute interval and binarised by within-participant centring.
 The results depend on one windowing scheme, one seed, one set of quality-control rules and two specific public checkpoints.
 The density map and the projections are descriptive only.
-Future work should validate the comparison on further datasets, adapt or fine-tune the encoders on in-domain gaze, explore calibrated personalisation for new users, and test longer windows and aggregated targets that match the granularity at which engagement is actually reported.
+Future work should validate the comparison on further datasets, explore calibrated personalisation for new users, and test longer windows and aggregated targets that match the granularity at which engagement is actually reported.
 
 \section{Conclusion}
 
 We compared four eye-tracking representations under one identical, leakage-safe leave-one-subject-out protocol for momentary engagement inference in office workers: raw multichannel windows, handcrafted ocular features, frozen GazeMAE embeddings and frozen MOMENT embeddings.
 Raw windows were the simplest and cheapest representation, and they achieved the best result with 0.538 accuracy and 0.551 ROC-AUC on unseen participants.
-The frozen encoders did not repay their additional cost out of the box. (again seems like we are writing a book)
-For practitioners working with limited labelled data, the evidence favours raw windows or handcrafted features as a starting point and adapting frozen foundation-model embeddings before use.
+Out of the box, the frozen encoders did not improve on them, despite their higher preprocessing and compute cost.
+For practitioners with limited labelled data, raw windows or handcrafted features are the better starting point, and frozen foundation-model embeddings should be adapted to the domain before use.

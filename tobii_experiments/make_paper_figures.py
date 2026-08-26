@@ -29,9 +29,23 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import yaml
-from matplotlib.colors import BoundaryNorm
+from matplotlib.colors import BoundaryNorm, LinearSegmentedColormap
 
 GAZE_COLUMNS = ["GazePointX", "GazePointY"]
+# Shared blue-to-red palette for Figure 1: light blue is sparse, deep red is dense.
+DENSITY_CMAP = LinearSegmentedColormap.from_list(
+    "gaze_blue_red",
+    [
+        (0.00, "#f7fbff"),
+        (0.06, "#c6dbef"),
+        (0.15, "#6baed6"),
+        (0.30, "#2166ac"),
+        (0.50, "#b2182b"),
+        (1.00, "#67001f"),
+    ],
+)
+BAR_COLOUR = "#2166ac"
+MEAN_TICK_COLOUR = "#b2182b"
 TARGET_COLUMN = "5"
 REPRESENTATIONS = [
     ("projection_raw.csv", "Raw"),
@@ -104,7 +118,7 @@ def make_figure1(labels: pd.DataFrame, hist: np.ndarray, out_path: Path) -> None
     fig, axes = plt.subplots(1, 2, figsize=(3.34, 1.55))
 
     density = hist / hist.sum()
-    axes[0].imshow(density.T, origin="upper", extent=(0, 1, 1, 0), cmap="magma", aspect="equal")
+    axes[0].imshow(density.T, origin="upper", extent=(0, 1, 1, 0), cmap=DENSITY_CMAP, aspect="equal")
     axes[0].set_xticks([0, 0.5, 1])
     axes[0].set_yticks([0, 0.5, 1])
     axes[0].set_xlabel("normalised $x$", labelpad=1)
@@ -112,9 +126,9 @@ def make_figure1(labels: pd.DataFrame, hist: np.ndarray, out_path: Path) -> None
     axes[0].set_title("(a) gaze density", pad=3)
 
     share = labels["rating"].value_counts(normalize=True).sort_index() * 100.0
-    axes[1].bar(share.index, share.values, color="#9aa7c7", width=0.8, zorder=2)
+    axes[1].bar(share.index, share.values, color=BAR_COLOUR, width=0.8, zorder=2)
     means = labels.groupby("subject")["rating"].mean().to_numpy()
-    axes[1].plot(means, np.full_like(means, 37.0), "|", color="#b2182b", markersize=6, zorder=3)
+    axes[1].plot(means, np.full_like(means, 37.0), "|", color=MEAN_TICK_COLOUR, markersize=6, zorder=3)
     axes[1].set_xlim(-0.7, 6.7)
     axes[1].set_ylim(0, 42)
     axes[1].set_xticks(range(7))
