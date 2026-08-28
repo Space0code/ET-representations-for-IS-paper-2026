@@ -12,56 +12,44 @@
 % results/final_paper_experiment/20260823_101436/tables/cohort_window_counts.csv
 % Do not use results/paper/table1_primary_loso_results_15_subject_snapshot.csv;
 % that file is the obsolete preliminary 15-subject snapshot.
-
 \begin{table}[t]
-	\caption{Leave-one-subject-out results for binary engagement inference, averaged over the 17 held-out participants.
-		SD is the standard deviation across participants and $\Delta$ is the improvement in accuracy over the majority baseline, paired within folds.
-		Balanced accuracy is relative to 0.500 by construction.
-		Accuracy uses all 17 folds.
-		The remaining metrics use the 16 folds whose test participant is not single-class.
-		M-F1 is macro-F1 and AUC is ROC-AUC\@.
-		Best predictive score and paired improvement in bold.}
+	\caption{Leave-one-subject-out results for binary engagement inference, averaged over held-out participants.
+		Balanced accuracy is the primary metric; its chance level is 0.500 by construction and SD is its spread across participants.
+		M-F1 is macro-F1, AUC is ROC-AUC, Acc.\ is plain accuracy and $\Delta$ its paired improvement over the majority baseline.
+		RF is the random forest.
+		Dimensionality is 600 for raw, 58--60 for handcrafted, 256 for GazeMAE and 1{,}024 for MOMENT.
+		All metrics but accuracy use the 16 folds whose test participant is not single-class.
+		Best value per column in bold.}
 	\label{tab:main}
-	\setlength{\tabcolsep}{3.2pt}
 	\footnotesize
-	\begin{tabular}{lcccccc}
+	\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccccc@{}}
 		\toprule
-		                    & Acc.          & SD   & $\Delta$         & Bal.\ acc.    & M-F1          & AUC           \\
+		                  & Bal.\ acc.    & SD   & M-F1          & AUC           & Acc.          & $\Delta$         \\
 		\midrule
-		Majority baseline   & .524          & .346 & ---              & .500          & .326          & .500          \\
+		Majority baseline & .500          & .000 & .326          & .500          & .524          & ---              \\
 		\midrule
-		\multicolumn{7}{l}{\emph{Raw signals} (600-d)}                                                                \\
-		\quad Random forest & .527          & .147 & $+.003$          & .529          & .460          & .546          \\
-		\quad MLP           & \textbf{.538} & .113 & $\mathbf{+.014}$ & \textbf{.536} & \textbf{.468} & \textbf{.551} \\
-		\midrule
-		\multicolumn{7}{l}{\emph{Handcrafted features} (58--60-d)}                                                    \\
-		\quad Random forest & .528          & .230 & $+.005$          & .508          & .418          & .527          \\
-		\quad MLP           & .531          & .145 & $+.008$          & .521          & .451          & .535          \\
-		\midrule
-		\multicolumn{7}{l}{\emph{GazeMAE embeddings} (256-d)}                                                         \\
-		\quad Random forest & .535          & .155 & $+.012$          & .509          & .441          & .513          \\
-		\quad MLP           & .520          & .107 & $-.004$          & .493          & .435          & .494          \\
-		\midrule
-		\multicolumn{7}{l}{\emph{MOMENT embeddings} (1{,}024-d)}                                                      \\
-		\quad Random forest & .521          & .286 & $-.002$          & .501          & .380          & .504          \\
-		\quad MLP           & .507          & .274 & $-.017$          & .497          & .362          & .504          \\
+		Raw, RF           & .529          & .063 & .460          & .546          & .527          & $+.003$          \\
+		Raw, MLP          & \textbf{.536} & .047 & \textbf{.468} & \textbf{.551} & \textbf{.538} & $\mathbf{+.014}$ \\
+		Handcrafted, RF   & .508          & .035 & .418          & .527          & .528          & $+.005$          \\
+		Handcrafted, MLP  & .521          & .032 & .451          & .535          & .531          & $+.008$          \\
+		GazeMAE, RF       & .509          & .037 & .441          & .513          & .535          & $+.012$          \\
+		GazeMAE, MLP      & .493          & .038 & .435          & .494          & .520          & $-.004$          \\
+		MOMENT, RF        & .501          & .013 & .380          & .504          & .521          & $-.002$          \\
+		MOMENT, MLP       & .497          & .010 & .362          & .504          & .507          & $-.017$          \\
 		\bottomrule
-	\end{tabular}
+	\end{tabular*}
 \end{table}
 
-Table~\ref{tab:main} reports the main comparison.
-Every representation--model combination sits close to the majority baseline.
-The highest observed result is the raw signal with the MLP, at 0.538 accuracy, 0.014 above the paired baseline, and it is also highest on balanced accuracy (0.536), macro-F1 (0.468) and ROC-AUC (0.551).
-Handcrafted features give the next-highest balanced accuracy, macro-F1 and ROC-AUC, and improve on the baseline accuracy with both classifiers.
-GazeMAE reaches 0.535 accuracy with the random forest and falls to 0.520, below the baseline, with the MLP\@.
-MOMENT falls below the baseline accuracy with both classifiers, while its balanced accuracy and ROC-AUC remain close to chance.
+Table~\ref{tab:main} reports the main comparison, in which every representation--model combination sat close to chance.
+The highest observed result was the raw signal with the MLP, at 0.536 balanced accuracy, 0.036 above the 0.500 chance level, and it was also highest on macro-F1 (0.468), ROC-AUC (0.551) and plain accuracy (0.538).
+Handcrafted features followed, reaching 0.521 balanced accuracy with the MLP and improving on chance with both classifiers.
+GazeMAE reached 0.509 balanced accuracy with the random forest and fell to 0.493, below chance, with the MLP\@.
+MOMENT stayed at chance with both classifiers.
 
-Raw signals give the highest value on every metric.
-Handcrafted features rank second on the three secondary discrimination metrics, while GazeMAE has the second-highest accuracy.
-The paired accuracy changes range from $-0.017$ to $+0.014$, much less than the spread across held-out participants, whose accuracy standard deviations range from 0.11 to 0.29.
-The MLP improves raw and handcrafted inputs but lowers both embedding results.
-A flexible head may help when a representation already carries useful signal.
-The effect is small, so this interpretation remains tentative.
+Handcrafted features ranked second on every metric except plain accuracy, where GazeMAE was second.
+The balanced-accuracy margins over chance ranged from $-0.007$ to $+0.036$, smaller than the spread across held-out participants, whose balanced-accuracy standard deviations ranged from 0.010 to 0.063.
+The MLP improved raw and handcrafted inputs but lowered both embedding results.
+A flexible head may help when a representation already carries useful signal, but the effect is small, so this interpretation remains tentative and requires further statistical validation.
 
 \begin{figure*}[t]
 	\centering
@@ -72,14 +60,13 @@ The effect is small, so this interpretation remains tentative.
 	\label{fig:tsne}
 \end{figure*}
 
-Figure~\ref{fig:tsne} shows the same difficulty geometrically.
-In the t-SNE projections, none of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
+Figure~\ref{fig:tsne} shows the same difficulty geometrically: none of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
 Colouring the identical projections by participant is more informative.
 Raw signals form clear participant-dominated patches, handcrafted features and GazeMAE group more weakly, and the MOMENT projection is close to uniform.
 The clearest visible structure is therefore person-specific, and the weaker grouping in the frozen embeddings may reflect smoothing by the encoders.
-Because the projections are exploratory, this interpretation and its link to Table~\ref{tab:main} remain conjectures.
+Because the projections are exploratory, this interpretation remains a conjecture.
 
-As a check on the label series, a one-step persistence predictor is evaluated over 1{,}434 temporal blocks.
-Participant-averaged accuracy reaches 0.999, while balanced accuracy reaches 0.960 and macro-F1 reaches 0.965 over the 13 participants with two-class test blocks.
+As a check on the label series, a one-step persistence predictor was evaluated over 1{,}434 temporal blocks.
+Participant-averaged accuracy reached 0.999, while balanced accuracy reached 0.960 and macro-F1 reached 0.965 over the 13 participants with two-class test blocks.
 Each questionnaire answer is broadcast unchanged to every window of the preceding 15-minute interval (Section~\ref{sec:method}), so most consecutive window pairs share a label by construction.
-Because the predictor uses observed labels within participants, its result cannot be compared directly with the unseen-participant results above.
+Because the predictor uses observed labels within participants, its result cannot be compared directly with the left-out-participant results above.

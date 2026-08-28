@@ -2,15 +2,13 @@
 
 Eye tracking has long been used as behavioural evidence for internal user states.
 Pupil dilation is a classical correlate of processing load \cite{kahneman1966pupil}, and fixation, saccade, blink and pupil statistics computed over short windows remain common inputs to models of workload, affect and engagement \cite{bixler2016mindwandering,fridman2018cognitive}.
-Our own prior work illustrates the appeal and the limits of this pipeline.
-Handcrafted ocular features supported coarse affective distinctions \cite{bozak2024emotion}.
-A systematic evaluation across several prediction targets also showed that task type is recognised far more reliably than graded workload, and that reported accuracy depends strongly on how the prediction target and the validation split are defined \cite{bozak2026workload}.
+Our own prior work illustrates the appeal and the limits of this pipeline: handcrafted ocular features support coarse affective distinctions \cite{bozak2024emotion}.
+A systematic evaluation across several prediction targets also shows that task type is recognised far more reliably than graded workload, and that reported accuracy depends strongly on how the prediction target and the validation split are defined \cite{bozak2026workload}.
 
 Learned representations offer an alternative.
 GazeMAE pretrains temporal autoencoders on raw position and velocity signals and shows that the resulting gaze-specific embeddings support downstream classification through a simple linear head \cite{bautista2020gazemae}.
 MOMENT takes a broader approach by pretraining a multichannel encoder for transfer across time-series domains without task-specific pretraining \cite{goswami2024moment}.
 The value of both encoders for modest, subject-dependent recordings of spontaneous behaviour remains unclear.
 
-Evaluation design is a further concern.
-Windows drawn from the same person are highly dependent, so random window splits and preprocessing fitted on the full dataset inflate reported performance, an effect documented in detail for other biosignal domains \cite{rosenblatt2024leakage}.
-Comparisons across representations are interpretable only when every candidate is evaluated on identical windows and labels under a subject-disjoint protocol with fold-local preprocessing.
+Evaluation design is a further concern, because windows drawn from the same person are highly dependent, so random window splits and preprocessing fitted on the full dataset inflate reported performance, an effect documented in detail for other biosignal domains \cite{rosenblatt2024leakage}.
+Comparisons across representations are interpretable only when every candidate is evaluated on identical windows and labels under a subject-disjoint protocol with per-fold preprocessing.

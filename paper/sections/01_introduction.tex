@@ -1,20 +1,18 @@
 \section{Introduction}
 
-Interactive systems that adapt to the person using them need evidence about that person's momentary state.
-In knowledge work, momentary engagement, particularly absorption in the task at hand, is an attractive target.
+Interactive systems that adapt to the person using them need evidence about that person's momentary psychological state.
+In knowledge work, momentary engagement, particularly immersion in the task at hand, is an attractive target.
 It fluctuates within a working day and is only weakly visible in application logs.
-Eye tracking is a plausible sensor for it.
-Gaze position, fixation and saccade dynamics, blinks and pupil size are available continuously and non-intrusively from a screen-mounted tracker, require no action from the user, and have documented links to attention and processing load.
+Eye tracking is a plausible sensor for estimating it.
+Gaze position, fixation and saccade dynamics, blinks and pupil size are available continuously and non-intrusively from a screen-mounted tracker, require no action from the user, and have documented links to attention and processing load \cite{kahneman1966pupil,rayner1998reading}.
 
 Turning a stream of gaze samples into model input forces a design decision that is rarely examined on its own, even though benchmark evaluations in time-series classification show that representation families differ substantially in accuracy on the same data \cite{middlehurst2024bakeoff}.
-A short window of eye-tracking data can be presented to a classifier in at least four ways.
+A window of eye-tracking data can be presented to a classifier in at least four ways.
 The raw multichannel signal uses selected tracker channels directly, at the price of high dimensionality and little domain structure.
-Handcrafted ocular features, including fixation, saccade, blink and pupil statistics, encode domain knowledge, stay interpretable, and remain common in applied work \cite{bixler2016mindwandering,fridman2018cognitive,bozak2024emotion,bozak2026workload}.
+Handcrafted ocular features, including fixation, saccade, blink and pupil statistics, encode domain knowledge, stay interpretable, and remain common in related work \cite{bixler2016mindwandering,fridman2018cognitive,bozak2024emotion,bozak2026workload}.
 Learned representations promise to remove the manual step.
-GazeMAE \cite{bautista2020gazemae} provides gaze-specific embeddings pretrained on eye-movement corpora, while general-purpose time-series foundation models such as MOMENT \cite{goswami2024moment} provide a frozen encoder intended to transfer to unseen domains.
-The four options differ substantially in preprocessing effort, storage and compute, yet they are seldom compared under the same experimental conditions.
-Published results differ in windows, labels, classifiers and, most consequentially, in validation protocol, so an apparent advantage of one representation can just as easily come from an optimistic split \cite{rosenblatt2024leakage}.
-We therefore ask which eye-tracking representation supports the most reliable inference of self-reported momentary engagement in unseen office workers.
-We answer with a controlled comparison of raw signals, handcrafted features, GazeMAE embeddings and MOMENT embeddings on identical three-second windows, an identical binary engagement target and identical leave-one-subject-out folds.
-Both pretrained encoders are kept frozen and only a downstream classifier is trained, which is the out-of-the-box setting a practitioner would try first.
-This design provides cost-aware guidance for representation selection under limited labelled data.
+GazeMAE \cite{bautista2020gazemae} provides gaze-specific embeddings pretrained on eye-movement corpora, while general-purpose time-series foundation models such as MOMENT \cite{goswami2024moment} provide a pretrained encoder intended to transfer to unseen domains.
+The four options differ substantially in preprocessing effort, storage and compute, yet they are seldom compared under the same conditions: published results differ in windows, labels, classifiers and, most consequentially, in validation protocol, so an apparent advantage of one representation can just as easily come from an optimistic split \cite{rosenblatt2024leakage}.
+We therefore ask which eye-tracking representation supports the most reliable inference of self-reported momentary engagement in unseen knowledge workers.
+We conducted a controlled comparison of raw signals, handcrafted features, GazeMAE embeddings and MOMENT embeddings on identical three-second windows, an identical binary engagement target and identical leave-one-subject-out folds.
+Both pretrained encoders were kept frozen and only a downstream classifier was trained, which is the out-of-the-box setting a practitioner would try first.

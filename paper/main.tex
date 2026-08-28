@@ -21,7 +21,7 @@
 
 \begin{document}
 
-\title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Office Workers}
+\title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Knowledge Workers}
 
 \author{Tomi Bo\v{z}ak}
 \affiliation{%
@@ -35,18 +35,22 @@
 	\institution{Jo\v{z}ef Stefan Institute}
 	\city{Ljubljana}
 	\country{Slovenia}}
+\affiliation{%
+	\institution{Jo\v{z}ef Stefan International Postgraduate School}
+	\city{Ljubljana}
+	\country{Slovenia}}
 \email{gasper.slapnicar@ijs.si}
 
 \renewcommand{\shortauthors}{Bo\v{z}ak and Slapni\v{c}ar}
 
 \begin{abstract}
-	Eye tracking is an appealing sensor for inferring momentary user states at work.
-	Before training a model, a practitioner must decide how to represent a short gaze window.
-	We compare four representation families on identical three-second windows from an ongoing office-worker study: raw multichannel signals, handcrafted ocular features, frozen GazeMAE embeddings and frozen MOMENT embeddings.
-	The target is a single self-reported item measuring momentary absorption.
-	All four are evaluated under leave-one-subject-out cross-validation with fold-local preprocessing, using a random forest classifier and an MLP against a majority baseline.
-	Raw signals give the highest observed unseen-participant performance (0.538 accuracy, 0.014 above the baseline), handcrafted features follow closely overall, and neither frozen encoder improves on the raw signal.
-	Absolute discrimination is weak throughout (best ROC-AUC 0.551) and between-participant variability dwarfs the differences between representations, so we report the ranking as preliminary, cost-aware guidance.
+	Eye tracking is an appealing sensor for inferring momentary psychological states at work.
+	Before training a model, a practitioner must decide how to represent a gaze window.
+	We compared four representation families on identical three-second windows drawn from knowledge workers across 657 full-workday recordings: raw multichannel signals (pupil size, gaze position and eye--screen distance), handcrafted ocular features, and embeddings obtained from pretrained eye-tracking (GazeMAE) and time-series (MOMENT) encoders, both used frozen.
+	The target was a single self-reported item measuring momentary engagement.
+	All four were evaluated under leave-one-subject-out cross-validation with per-fold preprocessing, using a random forest and an MLP classifier against a majority baseline.
+	Raw signals gave the highest observed performance on the left-out participant (0.536 balanced accuracy, 0.036 above the 0.500 chance level), handcrafted features followed closely overall, and neither frozen encoder improved on the raw signal.
+	Absolute discrimination was weak throughout (best ROC-AUC 0.551) and between-participant variability exceeded the differences between representations, so we report the ranking as preliminary, cost-aware guidance.
 \end{abstract}
 
 \keywords{eye tracking, engagement inference, representation learning, GazeMAE, MOMENT, subject generalisation}

@@ -3,18 +3,18 @@
 
 \subsection{Data and Eye-Tracking Representations}
 
-The data come from a multimodal study in which office workers are recorded during ordinary work at their own workplace.
-The wider collection records RGB video, eye tracking, microphone audio and screen activity.
+The data came from a study conducting multimodal data collection, in which knowledge workers were recorded during their daily routine at their own workplace.
+The data being collected includes RGB video, eye tracking, microphone audio and application usage.
 This paper uses the eye-tracking modality only.
 Data collection is ongoing and the dataset is not yet public.
-This preliminary study uses the cohort available at the time of writing, which includes 17 participants and 657 full-workday recordings, with 19 to 79 recordings per participant (median 32).
-The tracker samples at 60\,Hz, and we retain five channels: left and right pupil size, gaze $x$ and $y$, and the average eye--screen distance.
+This preliminary study used the cohort available at the time of writing, which includes 17 participants and 657 full-workday recordings, with 19 to 79 recordings per participant (median 32).
+The tracker sampled at 60\,Hz, and we retained five channels: left and right pupil size, gaze $x$ and $y$, and the average eye--screen distance.
 
-Labels come from an experience-sampling protocol.
-Participants are prompted several times per working day with a short questionnaire covering engagement, affect, fatigue, stress, physical comfort and workplace interactions.
-Our target is the absorption item, \enquote{Right now I am immersed in my work}, one of three momentary engagement items answered at every prompt and rated on a seven-point scale from 0 to 6.
-We call it the \emph{engagement rating}.
-Each prompt labels the 15 minutes of recording that precede it, and only those intervals enter this study.
+Labels came from an experience-sampling protocol, in which participants rated their momentary state in situ rather than recalling it afterwards.
+Participants were prompted several times per working day with a short questionnaire covering engagement, affect, fatigue, stress, physical comfort and workplace interactions.
+Our target was the immersion item, \enquote{Right now I am immersed in my work}, one of three momentary engagement items answered at every prompt and rated on a seven-point scale from 0 to 6.
+We refer to it as the \emph{engagement rating}.
+Each prompt labelled the 15 minutes of recording that preceded it, a labelling horizon we chose ourselves, and only those intervals entered this study.
 
 \begin{figure}[t]
 	\centering
@@ -27,54 +27,55 @@ Each prompt labels the 15 minutes of recording that precede it, and only those i
 	\label{fig:descriptive}
 \end{figure}
 
-Recordings are segmented into three-second windows with a 2.25-second step (25\,\% overlap).
-Every window carries an identifier built from the participant, the source recording and the position of the window inside that recording.
-The four representation exports are joined on this identifier, so all models see exactly the same windows.
-A window is kept only when at least 30\,\% of its frames are valid and at least 32 valid frames remain, and gaps inside a retained window are linearly interpolated.
-Of roughly 7.3 million recorded windows, only those inside a labelled interval have an unambiguous target and are usable.
-Handcrafted features are available for 177{,}244 of them, 157{,}685 also pass the encoder quality control, and 140{,}531 carry a numeric engagement rating.
+Recordings were segmented into fixed three-second windows with a 2.25-second step (25\,\% overlap).
+The four representation exports were joined on a per-window identifier, so all models saw exactly the same windows.
+At 60\,Hz, each window was expected to contain 180 frames, although sampling gaps sometimes reduced this number.
+A window was kept only if at least 30\,\% of its recorded frames were valid and at least 32 valid frames were available.
+These permissive thresholds accommodated frequent tracking loss in unconstrained office work.
+The 32-frame minimum corresponds to about 0.53 seconds at 60\,Hz, which can include two fixations of typical duration \cite{rayner1998reading}.
+Gaps inside retained windows were linearly interpolated.
+Of roughly 7.3 million recorded windows, only those inside a labelled interval are usable.
+Handcrafted features were available for 177{,}244 of them, 157{,}685 of those also had both encoder embeddings, and 140{,}531 carried a numeric engagement rating.
 The final modelling cohort accounts for about 2\,\% of all recorded windows and contains between 2{,}136 and 25{,}447 windows per participant.
 
-Display resolutions range from 1920$\times$1080 to 3840$\times$2160 pixels.
-Resolution differs between participants, and one participant used two different resolutions across recordings.
-For the raw representation, gaze coordinates are normalised to $[0,1]$ using each source recording's declared resolution, and out-of-screen coordinates are retained.
-Overall, 94.7\,\% of samples fall on the display, and only those enter the descriptive density map in Figure~\ref{fig:descriptive}(a), which shows the expected central concentration together with broad coverage of the screen.
+Display resolutions ranged from 1920$\times$1080 to 3840$\times$2160 pixels and differed between participants, and one participant used two resolutions across recordings.
+For the raw representation, gaze coordinates were normalised to $[0,1]$ using each source recording's declared resolution, and out-of-screen coordinates were retained.
+Overall, 94.7\,\% of samples fell on the display, and only those entered the descriptive density map in Figure~\ref{fig:descriptive}(a), which shows the expected central concentration together with broad coverage of the screen.
 
-Four representations are computed from these windows.
-Coordinate normalisation is applied only to the raw export because the handcrafted features and embeddings were computed earlier and retained unchanged.
+Four representations were computed from these windows.
+Coordinate normalisation was applied only to the raw export, because the handcrafted features and embeddings had been computed earlier and were retained unchanged.
 (1) \textbf{Raw signals} use the five channels, truncating longer windows to 120 samples and padding shorter ones with their final value before flattening them into a 600-dimensional vector.
-(2) \textbf{Handcrafted features} describe a window through the ocular events and signals it contains.
+(2) \textbf{Handcrafted features} describe a window through the ocular events and signals it contains, following the feature set of our earlier eye-tracking work \cite{bozak2026workload}.
 Blinks, fixations and saccades are taken from the tracker's event classification, and each event type contributes counts, rates and duration statistics, together with the location and dispersion of fixations and the amplitude and velocity of saccades.
 The remaining groups summarise pupil size and its rate of change, the eye--screen distance and its dynamics, and the fraction of missing samples in each channel.
-This gives 181 numeric features per window, which are filtered inside each fold as described in Section~\ref{subsec:design}.
-Window identifiers, timestamps and questionnaire columns travel with the export and are not used as model input.
-(3) \textbf{GazeMAE embeddings} are computed with the public micro--macro autoencoder checkpoints applied to pixel-coordinate gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
-(4) \textbf{MOMENT embeddings} are calculated with the frozen \textsc{MOMENT-1-large} encoder applied to the five-channel windows before display-coordinate normalisation, with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
-Both encoders are used out of the box with no weight updates.
+This gives 181 numeric features per window, which were filtered inside each fold as described in Section~\ref{subsec:design}.
+Window identifiers, timestamps and questionnaire columns were not used as model input.
+(3) \textbf{GazeMAE embeddings} were computed with the public micro--macro autoencoder checkpoints applied to pixel-coordinate gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
+(4) \textbf{MOMENT embeddings} were calculated with the \textsc{MOMENT-1-large} encoder applied to the five-channel windows before display-coordinate normalisation, with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
+Both pretrained encoders were used out of the box and kept frozen, with no weight updates.
 
 \subsection{Experimental Design}
 \label{subsec:design}
 
-Engagement ratings are strongly person-specific, with participant means spanning 2.2 to 4.9 on the 0--6 scale (Figure~\ref{fig:descriptive}(b)).
+Engagement ratings were strongly person-specific, with participant means spanning 2.2 to 4.9 on the 0--6 scale (Figure~\ref{fig:descriptive}(b)).
 An absolute threshold would therefore mostly encode participant identity.
-Inside every fold, the ratings of each training participant are mean-centred separately.
-The held-out participant's ratings are centred with the unweighted mean of the training participants' means, which avoids using held-out labels to set the threshold.
+Inside every fold, the ratings of each training participant were mean-centred separately.
+The held-out participant's ratings were centred with the unweighted mean of the training participants' means, which avoids using held-out labels to set the threshold.
 A window is positive when its centred rating exceeds zero.
 Over the cohort this gives 56.3\,\% positive windows, ranging from 33\,\% to 72\,\% per participant.
 
-The primary protocol is leave-one-subject-out cross-validation over the 17 participants.
-Everything data-dependent is fitted inside the fold.
-Handcrafted-feature filtering is estimated on the training participants and then applied with unchanged parameters to the held-out participant.
-For every representation, median imputation and standardisation are fitted on the training participants only.
+The primary protocol was leave-one-subject-out cross-validation over the 17 participants.
+Everything data-dependent was fitted inside the fold.
+Handcrafted-feature filtering, median imputation and standardisation were all fitted on the training participants only and then applied with unchanged parameters to the held-out participant.
 The filtering drops columns with more than 60\,\% missing values, zero variance, or absolute Pearson correlation above 0.8 with a retained column, leaving 58--60 of the 181 feature candidates.
 
-Three predictors are run on every representation: a majority baseline, a random forest (300 trees, balanced class weights) and an MLP (1028--512--256--128--64 units, GELU activations, layer normalisation, Adam with learning rate $2\times10^{-4}$ and weight decay $10^{-3}$, batch size 1024, at most 200 epochs with early stopping after 15 epochs without improvement).
-For the MLP, a stratified 20\,\% split of the outer training windows is used for early stopping.
-A single seed is used throughout.
-The representation~$\times$~model grid checks whether the representation ranking is robust across models.
+Three predictors were run on every representation: a majority baseline, a random forest (300 trees, balanced class weights) and an MLP (1028--512--256--128--64 units, GELU activations, layer normalisation, Adam with learning rate $2\times10^{-4}$ and weight decay $10^{-3}$, batch size 1024, at most 200 epochs with early stopping after 15 epochs without improvement).
+For the MLP, a stratified 20\,\% split of the outer training windows was used for early stopping.
+A single seed was used throughout.
 
-We report accuracy as the primary metric, together with its improvement over the baseline paired within folds, and balanced accuracy, macro-F1 and ROC-AUC as secondary discrimination measures.
-All metrics are aggregated as unweighted means over participants.
+We report balanced accuracy as the primary metric: because the positive rate varies so strongly between participants, plain accuracy partly measures a participant's own base rate, while balanced accuracy has a fixed chance level of 0.500 that makes folds comparable.
+Accuracy, together with its improvement over the majority baseline paired within folds, and macro-F1 and ROC-AUC are reported as secondary measures.
+All metrics were aggregated as unweighted means over participants.
 One participant self-reported every window below the training centre, so that test fold contains a single class.
-Therefore, accuracy is defined for all 17 folds and the remaining metrics for 16.
-As a separate within-participant check, we also run a one-step persistence predictor within recordings, carrying the last observed label forward in 90-window test blocks after at least 300 calibration windows.
+Balanced accuracy, macro-F1 and ROC-AUC are therefore defined for 16 folds and accuracy for all 17.
+As a separate within-participant check, we also ran a one-step persistence predictor within recordings, carrying the last observed label forward in 90-window test blocks after at least 300 calibration windows.
