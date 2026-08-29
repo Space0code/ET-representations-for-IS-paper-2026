@@ -19,7 +19,7 @@
 		RF is the random forest.
 		Dimensionality is 600 for raw, 58--60 for handcrafted, 256 for GazeMAE and 1{,}024 for MOMENT.
 		All metrics but accuracy use the 16 folds whose test participant is not single-class.
-		Best value per column in bold.}
+		Best value per metric column in bold.}
 	\label{tab:main}
 	\footnotesize
 	\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccccc@{}}
@@ -49,7 +49,7 @@ MOMENT stayed at chance with both classifiers.
 Handcrafted features ranked second on every metric except plain accuracy, where GazeMAE was second.
 Across models, balanced accuracy differed from chance by $-0.003$ to $+0.036$.
 For the leading raw result, the 0.075 standard deviation across participants exceeded both its 0.036 margin over chance and the 0.015 gap to the best handcrafted result.
-Both classifiers ordered the representations identically, and within each representation their difference was smaller than that spread, so we do not read a ranking between them.
+On balanced accuracy both classifiers placed raw first and MOMENT last, while the two middle representations swapped; within each representation their difference was smaller than that spread, so we do not read a ranking between them.
 
 \begin{figure*}[t]
 	\centering
