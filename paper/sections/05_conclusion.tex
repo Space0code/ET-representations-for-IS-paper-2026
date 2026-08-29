@@ -8,8 +8,8 @@ GazeMAE was pretrained on controlled stimulus-viewing corpora and MOMENT on gene
 Neither was pretrained for day-long, spontaneous office gaze with its dropouts, idle stretches and heterogeneous displays.
 These results concern frozen transfer only, and the next step is to fine-tune the encoders on office gaze, starting with GazeMAE, whose result depended on the classifier (Section~\ref{sec:results}).
 
-For practical use, raw signals scored best here and offer the simplest input pipeline, requiring no feature engineering, pretrained checkpoint or encoder inference pass.
-Handcrafted features should still be considered: they give the strongest overall alternative, they remain interpretable, and our earlier feature-based analyses found them effective on related eye-tracking targets \cite{bozak2024emotion,bozak2026workload}.
+For practical use, raw signals offer the simplest input pipeline, requiring no feature engineering, pretrained checkpoint or encoder inference pass.
+Handcrafted features should still be considered because they remain interpretable, and our earlier feature-based analyses found them effective on related eye-tracking targets \cite{bozak2024emotion,bozak2026workload}.
 Our results do not support a frozen general-purpose encoder as the default choice.
 
 Several limitations bound these conclusions: the study uses one unpublished and still-growing dataset with 17 participants.

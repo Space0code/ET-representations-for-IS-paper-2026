@@ -173,3 +173,16 @@
 ## 24 — Fixed-duration window wording clarified (2026-08-28)
 
 - Methodology now states explicitly that every analysis window has a fixed three-second duration and that sampling gaps can leave fewer than the nominal 180 recorded frames. It no longer describes windows as longer or shorter. The two validity conditions remain unchanged at 30\,% valid recorded frames and at least 32 valid frames, followed by interpolation within retained windows.
+
+## 25 — Final publication-readiness audit (2026-08-28)
+
+- The paper was rebuilt to convergence and every rendered page was visually inspected. It remains exactly four A4 pages, with zero overfull boxes, undefined citations/references, visible placeholders, clipping or figure/table defects. The current full-width Figure 2 fits; the earlier 0.86-text-width ceiling is no longer current after the latest prose reductions.
+- Repetition was reduced conservatively. The Introduction now names the representation choices without repeating the literature detail supplied by Related Work, and the practical paragraph in Discussion no longer restates the full result ranking. Abstract, Results, Discussion and Conclusion retain only their section-specific summary functions.
+- A material class-balance inconsistency was corrected from the final fold artifact. Under the actual left-out-participant threshold, the fold-defined positive rate is **57.9 % overall** and **0–95.4 % across participants** (reported as 0–95 %), not the diagnostic 56.3 % and 33–72 % values. The latter describe within-participant centring and must not be used to characterise the held-out test folds. The leading raw-MLP variability comparison is now explicit: SD 0.047 exceeds its 0.036 chance margin and the 0.015 gap to the best handcrafted result.
+- Four margin overflows found in the pre-audit build were removed through local wording changes. The remaining log messages are expected template warnings from suppressing ACM-only CCS/reference blocks and harmless underfull/column-balancing notices.
+- **Submission is still blocked on author-supplied ethics details.** The official IS2026 human-subject policy says the paper must state the necessary permissions/compliance and that consent was obtained. No verified approval/exemption wording, identifier or consent detail exists locally, so none was invented. The official 2026 author instructions also require the authors to verify academic titles, affiliations and contact emails. The empty DOI is correct for initial submission and should be filled only for the camera-ready version when the chairs provide it.
+
+## 26 — Ethics statement waived by the IS board (2026-08-29)
+
+- The user consulted the IS board directly and was told that an ethics statement is not required for this paper. This author-confirmed, case-specific guidance supersedes the general-policy concern recorded in items 21 and 25.
+- Do not add an ethics approval, exemption or informed-consent statement, and do not add an ethics placeholder. A full source search confirmed that the manuscript currently contains no ethics wording or incomplete placeholder.

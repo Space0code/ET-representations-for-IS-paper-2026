@@ -17,8 +17,6 @@
 \acmConference[Information Society 2026]{Information Society 2026: 29th International Multiconference}{5--9 October 2026}{Ljubljana, Slovenia}
 \settopmatter{printccs=false,printacmref=false}
 
-\newcommand{\placeholder}[1]{\textcolor{red}{[\textsc{To complete:} #1]}}
-
 \begin{document}
 
 \title[Eye-Tracking Representations for Engagement]{Comparison of Eye-Tracking Representations for Engagement Inference in Knowledge Workers}
@@ -49,7 +47,7 @@
 	We compared four representation families on identical three-second windows drawn from knowledge workers across 657 full-workday recordings: raw multichannel signals (pupil size, gaze position and eye--screen distance), handcrafted ocular features, and embeddings obtained from pretrained eye-tracking (GazeMAE) and time-series (MOMENT) encoders, both used frozen.
 	The target was a single self-reported item measuring momentary engagement.
 	All four were evaluated under leave-one-subject-out cross-validation with per-fold preprocessing, using a random forest and an MLP classifier against a majority baseline.
-	Raw signals gave the highest observed performance on the left-out participant (0.536 balanced accuracy, 0.036 above the 0.500 chance level), handcrafted features followed closely overall, and neither frozen encoder improved on the raw signal.
+	Raw signals gave the highest observed performance on the left-out participant (0.536 balanced accuracy), handcrafted features followed closely overall, and neither frozen encoder improved on the raw signal.
 	Absolute discrimination was weak throughout (best ROC-AUC 0.551) and between-participant variability exceeded the differences between representations, so we report the ranking as preliminary, cost-aware guidance.
 \end{abstract}
 

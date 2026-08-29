@@ -10,5 +10,6 @@ GazeMAE pretrains temporal autoencoders on raw position and velocity signals and
 MOMENT takes a broader approach by pretraining a multichannel encoder for transfer across time-series domains without task-specific pretraining \cite{goswami2024moment}.
 The value of both encoders for modest, subject-dependent recordings of spontaneous behaviour remains unclear.
 
-Evaluation design is a further concern, because windows drawn from the same person are highly dependent, so random window splits and preprocessing fitted on the full dataset inflate reported performance, an effect documented in detail for other biosignal domains \cite{rosenblatt2024leakage}.
+A further concern is evaluation design.
+Windows drawn from the same person are highly dependent, so random window splits and preprocessing fitted on the full dataset inflate reported performance, an effect documented in detail for other biosignal domains \cite{rosenblatt2024leakage}.
 Comparisons across representations are interpretable only when every candidate is evaluated on identical windows and labels under a subject-disjoint protocol with per-fold preprocessing.

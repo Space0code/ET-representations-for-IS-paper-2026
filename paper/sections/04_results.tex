@@ -40,14 +40,15 @@
 	\end{tabular*}
 \end{table}
 
-Table~\ref{tab:main} reports the main comparison, in which every representation--model combination sat close to chance.
+Table~\ref{tab:main} reports the main comparison, in which every pairing of representation and model sat close to chance.
 The highest observed result was the raw signal with the MLP, at 0.536 balanced accuracy, 0.036 above the 0.500 chance level, and it was also highest on macro-F1 (0.468), ROC-AUC (0.551) and plain accuracy (0.538).
 Handcrafted features followed, reaching 0.521 balanced accuracy with the MLP and improving on chance with both classifiers.
 GazeMAE reached 0.509 balanced accuracy with the random forest and fell to 0.493, below chance, with the MLP\@.
 MOMENT stayed at chance with both classifiers.
 
 Handcrafted features ranked second on every metric except plain accuracy, where GazeMAE was second.
-The balanced-accuracy margins over chance ranged from $-0.007$ to $+0.036$, smaller than the spread across held-out participants, whose balanced-accuracy standard deviations ranged from 0.010 to 0.063.
+Across models, balanced accuracy differed from chance by $-0.007$ to $+0.036$.
+For the leading raw MLP result, the 0.047 standard deviation across participants exceeded both its 0.036 margin over chance and the 0.015 gap to the best handcrafted result.
 The MLP improved raw and handcrafted inputs but lowered both embedding results.
 A flexible head may help when a representation already carries useful signal, but the effect is small, so this interpretation remains tentative and requires further statistical validation.
 

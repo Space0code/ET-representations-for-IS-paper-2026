@@ -62,9 +62,9 @@ An absolute threshold would therefore mostly encode participant identity.
 Inside every fold, the ratings of each training participant were mean-centred separately.
 The held-out participant's ratings were centred with the unweighted mean of the training participants' means, which avoids using held-out labels to set the threshold.
 A window is positive when its centred rating exceeds zero.
-Over the cohort this gives 56.3\,\% positive windows, ranging from 33\,\% to 72\,\% per participant.
+Across the left-out folds, 57.9\,\% of windows were positive, and the participant-specific rates ranged from 0\,\% to 95\,\%.
 
-The primary protocol was leave-one-subject-out cross-validation over the 17 participants.
+The primary protocol was subject-disjoint cross-validation, with one of the 17 participants held out in each fold.
 Everything data-dependent was fitted inside the fold.
 Handcrafted-feature filtering, median imputation and standardisation were all fitted on the training participants only and then applied with unchanged parameters to the held-out participant.
 The filtering drops columns with more than 60\,\% missing values, zero variance, or absolute Pearson correlation above 0.8 with a retained column, leaving 58--60 of the 181 feature candidates.
