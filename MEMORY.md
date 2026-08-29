@@ -192,3 +192,14 @@
 - Existing citations were restored at appropriate claims in the Introduction without adding bibliography entries: Kahneman/Rayner support eye tracking as a plausible sensor, the four applied feature papers support the handcrafted-feature claim, and the primary GazeMAE/MOMENT papers appear at the models' first main-text mention. The same primary papers now support the specific pretraining-domain claim in Discussion. Abstract citations remain omitted by convention.
 - The final 17-fold artifact was audited across every representation/model row. Each of the 140,531 windows appears once as a held-out test window; exactly **81,341 are positive**, or **57.881179 %** (reported as 57.9 %), with participant rates **0–95.358841 %** (reported as 0–95 %). Test counts and rates agree across all representation/model rows, and the regression test for the held-out centring rule passes.
 - The older **56.3 %** figure was produced by the descriptive full-cohort transform, which centres each participant using that participant's own labels. It must not be reported as the class balance of the leakage-safe LOSO evaluation, where the held-out participant is centred by the unweighted mean of the training-participant means.
+
+## 28 — Final submission check and IDE build race (2026-08-29)
+
+- The current manuscript compiles to a valid four-page A4 PDF with zero overfull boxes, unresolved citations/references, visible placeholders, clipping or layout defects. All four final pages were visually inspected.
+- A concurrent IDE/LaTeX Workshop auto-build briefly truncated paper/main.pdf while the command-line check was running, indicated by paper/main.synctex(busy). After the IDE build finished, pdfinfo validated the final 2,791,394-byte PDF as four A4 pages. Before uploading, wait for any main.synctex(busy) file to disappear and open the exact PDF being submitted.
+- The only remaining non-technical check is author metadata: the current PDF shows both names, affiliations and emails, but the IS author instructions ask authors to include/verify academic titles as well. The DOI remains correctly blank for initial submission.
+
+## 28 — Figure 1 caption spacing checked (2026-08-29)
+
+- The apparently large gap below Figure 1 is the standard `\textfloatsep` after a top-of-column float: 20 pt plus 2 pt minus 4 pt, inherited by the supplied `sigconf` `acmart` class. There is no manual `\vspace`, blank paragraph, or excess whitespace in the figure PDF causing it.
+- The official IS2026 instructions ask authors to adhere to the supplied template, and the repository's `paper/acmart.cls` is byte-identical to the class originally imported with that template. The spacing was therefore left unchanged rather than overridden locally.
