@@ -4,7 +4,7 @@ On this dataset, raw signals gave the highest observed scores among the four rep
 The small margins over chance show that three seconds of gaze does not make momentary self-reported engagement well predictable across people, whichever representation is used.
 
 We interpret the lack of improvement from the frozen encoders as a mismatch between their pretraining data and this task.
-GazeMAE was pretrained on controlled stimulus-viewing corpora and MOMENT on generic time-series benchmarks.
+GazeMAE was pretrained on controlled stimulus-viewing corpora and MOMENT on generic time-series benchmarks \cite{bautista2020gazemae,goswami2024moment}.
 Neither was pretrained for day-long, spontaneous office gaze with its dropouts, idle stretches and heterogeneous displays.
 These results concern frozen transfer only, and the next step is to fine-tune the encoders on office gaze, starting with GazeMAE, whose result depended on the classifier (Section~\ref{sec:results}).
 

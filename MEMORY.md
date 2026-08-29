@@ -186,3 +186,9 @@
 
 - The user consulted the IS board directly and was told that an ethics statement is not required for this paper. This author-confirmed, case-specific guidance supersedes the general-policy concern recorded in items 21 and 25.
 - Do not add an ethics approval, exemption or informed-consent statement, and do not add an ethics placeholder. A full source search confirmed that the manuscript currently contains no ethics wording or incomplete placeholder.
+
+## 27 — Citations restored and positive-window count verified (2026-08-29)
+
+- Existing citations were restored at appropriate claims in the Introduction without adding bibliography entries: Kahneman/Rayner support eye tracking as a plausible sensor, the four applied feature papers support the handcrafted-feature claim, and the primary GazeMAE/MOMENT papers appear at the models' first main-text mention. The same primary papers now support the specific pretraining-domain claim in Discussion. Abstract citations remain omitted by convention.
+- The final 17-fold artifact was audited across every representation/model row. Each of the 140,531 windows appears once as a held-out test window; exactly **81,341 are positive**, or **57.881179 %** (reported as 57.9 %), with participant rates **0–95.358841 %** (reported as 0–95 %). Test counts and rates agree across all representation/model rows, and the regression test for the held-out centring rule passes.
+- The older **56.3 %** figure was produced by the descriptive full-cohort transform, which centres each participant using that participant's own labels. It must not be reported as the class balance of the leakage-safe LOSO evaluation, where the held-out participant is centred by the unweighted mean of the training-participant means.
