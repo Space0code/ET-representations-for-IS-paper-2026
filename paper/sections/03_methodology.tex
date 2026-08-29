@@ -43,15 +43,17 @@ For the raw representation, gaze coordinates were normalised to $[0,1]$ using ea
 Overall, 94.7\,\% of samples fell on the display, and only those entered the descriptive density map in Figure~\ref{fig:descriptive}(a), which shows the expected central concentration together with broad coverage of the screen.
 
 Four representations were computed from these windows.
-Coordinate normalisation was applied only to the raw export, because the handcrafted features and embeddings had been computed earlier and were retained unchanged.
-(1) \textbf{Raw signals} use the five channels, truncating longer windows to 120 samples and padding shorter ones with their final value before flattening them into a 600-dimensional vector.
+Coordinates are display-normalised for the raw export and in visual-angle units for GazeMAE; the handcrafted features retain pixel coordinates.
+(1) \textbf{Raw signals} use the five channels, each linearly resampled to 120 samples so that the whole window is covered, flattened into a 600-dimensional vector.
 (2) \textbf{Handcrafted features} describe a window through the ocular events and signals it contains, following the feature set of our earlier eye-tracking work \cite{bozak2026workload}.
 Blinks, fixations and saccades are taken from the tracker's event classification, and each event type contributes counts, rates and duration statistics, together with the location and dispersion of fixations and the amplitude and velocity of saccades.
 The remaining groups summarise pupil size and its rate of change, the eye--screen distance and its dynamics, and the fraction of missing samples in each channel.
 This gives 181 numeric features per window, which were filtered inside each fold as described in Section~\ref{subsec:design}.
 Window identifiers, timestamps and questionnaire columns were not used as model input.
-(3) \textbf{GazeMAE embeddings} were computed with the public micro--macro autoencoder checkpoints applied to pixel-coordinate gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
+(3) \textbf{GazeMAE embeddings} were computed with the public micro--macro autoencoder checkpoints applied to gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
+Following the encoder's own preprocessing, coordinates were rescaled to 35 pixels per degree of visual angle using each recording's display resolution and the measured eye--screen distance, assuming the standard physical size for each resolution.
 (4) \textbf{MOMENT embeddings} were calculated with the \textsc{MOMENT-1-large} encoder applied to the five-channel windows before display-coordinate normalisation, with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
+Its encoder standardises each channel per window, so the input coordinate scale is immaterial.
 Both pretrained encoders were used out of the box and kept frozen, with no weight updates.
 
 \subsection{Experimental Design}

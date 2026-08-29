@@ -88,7 +88,7 @@ raw:
   csv_path: null
   channels: [PupilSizeLeft, PupilSizeRight, GazePointX, GazePointY, AverageDistance]
   resample_length: 120
-  length_mode: truncate_pad
+  length_mode: resample
   flatten_length: 120
   validity_gaze_columns: [ValidityLeft, ValidityRight]
   validity_pupil_columns: [PupilValidityLeft, PupilValidityRight]

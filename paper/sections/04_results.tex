@@ -1,11 +1,11 @@
 \section{Results}
 \label{sec:results}
 
-% FINAL NUMERIC SOURCES (validated 2026-08-23; 17 subjects, seed 42):
+% FINAL NUMERIC SOURCES (validated 2026-08-29; 17 subjects, seed 42):
 % Table 1:
-% results/final_paper_experiment/20260823_101436/tables/paper_main_results.csv
+% results/final_paper_experiment/20260829_150833/tables/paper_main_results.csv
 % Separate persistence check:
-% results/final_paper_experiment/20260823_101436/tables/paper_persistence_result.csv
+% results/final_paper_experiment/20260829_150833/tables/paper_persistence_result.csv
 % Audit/detail files (not the values to transcribe into the main paper table):
 % results/final_paper_experiment/20260823_101436/tables/loso_fold_metrics.csv
 % results/final_paper_experiment/20260823_101436/tables/persistence_fold_metrics.csv
@@ -28,12 +28,12 @@
 		\midrule
 		Majority baseline & .500          & .000 & .326          & .500          & .524          & ---              \\
 		\midrule
-		Raw, RF           & .529          & .063 & .460          & .546          & .527          & $+.003$          \\
-		Raw, MLP          & \textbf{.536} & .047 & \textbf{.468} & \textbf{.551} & \textbf{.538} & $\mathbf{+.014}$ \\
+		Raw, RF           & \textbf{.536} & .075 & .464          & .550          & .528          & $+.005$          \\
+		Raw, MLP          & .534          & .050 & \textbf{.472} & \textbf{.553} & \textbf{.542} & $\mathbf{+.019}$ \\
 		Handcrafted, RF   & .508          & .035 & .418          & .527          & .528          & $+.005$          \\
 		Handcrafted, MLP  & .521          & .032 & .451          & .535          & .531          & $+.008$          \\
-		GazeMAE, RF       & .509          & .037 & .441          & .513          & .535          & $+.012$          \\
-		GazeMAE, MLP      & .493          & .038 & .435          & .494          & .520          & $-.004$          \\
+		GazeMAE, RF       & .510          & .027 & .441          & .514          & .540          & $+.016$          \\
+		GazeMAE, MLP      & .505          & .031 & .447          & .508          & .532          & $+.009$          \\
 		MOMENT, RF        & .501          & .013 & .380          & .504          & .521          & $-.002$          \\
 		MOMENT, MLP       & .497          & .010 & .362          & .504          & .507          & $-.017$          \\
 		\bottomrule
@@ -41,16 +41,15 @@
 \end{table}
 
 Table~\ref{tab:main} reports the main comparison, in which every pairing of representation and model sat close to chance.
-The highest observed result was the raw signal with the MLP, at 0.536 balanced accuracy, 0.036 above the 0.500 chance level, and it was also highest on macro-F1 (0.468), ROC-AUC (0.551) and plain accuracy (0.538).
+Raw signals gave the highest observed result with both classifiers: 0.536 balanced accuracy with the random forest, 0.036 above the 0.500 chance level, and 0.534 with the MLP, which led on macro-F1 (0.472), ROC-AUC (0.553) and plain accuracy (0.542).
 Handcrafted features followed, reaching 0.521 balanced accuracy with the MLP and improving on chance with both classifiers.
-GazeMAE reached 0.509 balanced accuracy with the random forest and fell to 0.493, below chance, with the MLP\@.
+GazeMAE stayed just above chance, at 0.510 balanced accuracy with the random forest and 0.505 with the MLP\@.
 MOMENT stayed at chance with both classifiers.
 
 Handcrafted features ranked second on every metric except plain accuracy, where GazeMAE was second.
-Across models, balanced accuracy differed from chance by $-0.007$ to $+0.036$.
-For the leading raw MLP result, the 0.047 standard deviation across participants exceeded both its 0.036 margin over chance and the 0.015 gap to the best handcrafted result.
-The MLP improved raw and handcrafted inputs but lowered both embedding results.
-A flexible head may help when a representation already carries useful signal, but the effect is small, so this interpretation remains tentative and requires further statistical validation.
+Across models, balanced accuracy differed from chance by $-0.003$ to $+0.036$.
+For the leading raw result, the 0.075 standard deviation across participants exceeded both its 0.036 margin over chance and the 0.015 gap to the best handcrafted result.
+Both classifiers ordered the representations identically, and within each representation their difference was smaller than that spread, so we do not read a ranking between them.
 
 \begin{figure*}[t]
 	\centering

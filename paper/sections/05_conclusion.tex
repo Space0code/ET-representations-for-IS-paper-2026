@@ -6,7 +6,7 @@ The small margins over chance show that three seconds of gaze does not make mome
 We interpret the lack of improvement from the frozen encoders as a mismatch between their pretraining data and this task.
 GazeMAE was pretrained on controlled stimulus-viewing corpora and MOMENT on generic time-series benchmarks \cite{bautista2020gazemae,goswami2024moment}.
 Neither was pretrained for day-long, spontaneous office gaze with its dropouts, idle stretches and heterogeneous displays.
-These results concern frozen transfer only, and the next step is to fine-tune the encoders on office gaze, starting with GazeMAE, whose result depended on the classifier (Section~\ref{sec:results}).
+These results concern frozen transfer only, and the next step is to fine-tune the encoders on office gaze, starting with GazeMAE, which came closest to the handcrafted baseline (Section~\ref{sec:results}).
 
 For practical use, raw signals offer the simplest input pipeline, requiring no feature engineering, pretrained checkpoint or encoder inference pass.
 Handcrafted features should still be considered because they remain interpretable, and our earlier feature-based analyses found them effective on related eye-tracking targets \cite{bozak2024emotion,bozak2026workload}.
@@ -21,5 +21,5 @@ Future work should validate the comparison on further datasets, explore calibrat
 \section{Conclusion}
 
 We compared raw multichannel windows, handcrafted ocular features and frozen GazeMAE and MOMENT embeddings under one identical, leakage-safe leave-one-subject-out protocol for momentary engagement inference in knowledge workers.
-Raw windows produced the highest observed result with 0.536 balanced accuracy and 0.551 ROC-AUC on left-out participants, and out of the box the frozen encoders did not improve on them, despite their higher preprocessing and compute cost.
+Raw windows produced the highest observed result with 0.536 balanced accuracy and 0.553 ROC-AUC on left-out participants, and out of the box the frozen encoders did not improve on them, despite their higher preprocessing and compute cost.
 For practitioners with limited labelled data, raw windows or handcrafted features are the better starting point, while frozen encoders need domain-specific validation or adaptation before use.
