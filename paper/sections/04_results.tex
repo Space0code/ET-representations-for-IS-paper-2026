@@ -14,8 +14,8 @@
 % that file is the obsolete preliminary 15-subject snapshot.
 \begin{table}[t]
 	\caption{Leave-one-subject-out results for binary engagement inference, averaged over held-out participants.
-		Balanced accuracy is the primary metric; its chance level is 0.500 by construction and SD is its spread across participants.
-		M-F1 is macro-F1, AUC is ROC-AUC, Acc.\ is plain accuracy and $\Delta$ its paired improvement over the majority baseline.
+		Balanced accuracy is the primary metric; its chance level is 0.500 by construction, $\Delta$ is its paired improvement over the majority baseline and SD is its spread across participants.
+		M-F1 is macro-F1, AUC is ROC-AUC and Acc.\ is plain accuracy.
 		RF is the random forest.
 		Dimensionality is 600 for raw, 58--60 for handcrafted, 256 for GazeMAE and 1{,}024 for MOMENT.
 		All metrics but accuracy use the 16 folds whose test participant is not single-class.
@@ -24,18 +24,18 @@
 	\footnotesize
 	\begin{tabular*}{\columnwidth}{@{\extracolsep{\fill}}lcccccc@{}}
 		\toprule
-		                  & Bal.\ acc.    & SD   & M-F1          & AUC           & Acc.          & $\Delta$         \\
+		                  & Bal.\ acc.    & $\Delta$         & SD   & M-F1          & AUC           & Acc.          \\
 		\midrule
-		Majority baseline & .500          & .000 & .326          & .500          & .524          & ---              \\
+		Majority baseline & .500          & ---              & .000 & .326          & .500          & .524          \\
 		\midrule
-		Raw, RF           & \textbf{.536} & .075 & .464          & .550          & .528          & $+.005$          \\
-		Raw, MLP          & .534          & .050 & \textbf{.472} & \textbf{.553} & \textbf{.542} & $\mathbf{+.019}$ \\
-		Handcrafted, RF   & .508          & .035 & .418          & .527          & .528          & $+.005$          \\
-		Handcrafted, MLP  & .521          & .032 & .451          & .535          & .531          & $+.008$          \\
-		GazeMAE, RF       & .510          & .027 & .441          & .514          & .540          & $+.016$          \\
-		GazeMAE, MLP      & .505          & .031 & .447          & .508          & .532          & $+.009$          \\
-		MOMENT, RF        & .501          & .013 & .380          & .504          & .521          & $-.002$          \\
-		MOMENT, MLP       & .497          & .010 & .362          & .504          & .507          & $-.017$          \\
+		Raw, RF           & \textbf{.536} & $\mathbf{+.036}$ & .075 & .464          & .550          & .528          \\
+		Raw, MLP          & .534          & $+.034$          & .050 & \textbf{.472} & \textbf{.553} & \textbf{.542} \\
+		Handcrafted, RF   & .508          & $+.008$          & .035 & .418          & .527          & .528          \\
+		Handcrafted, MLP  & .521          & $+.021$          & .032 & .451          & .535          & .531          \\
+		GazeMAE, RF       & .510          & $+.010$          & .027 & .441          & .514          & .540          \\
+		GazeMAE, MLP      & .505          & $+.005$          & .031 & .447          & .508          & .532          \\
+		MOMENT, RF        & .501          & $+.001$          & .013 & .380          & .504          & .521          \\
+		MOMENT, MLP       & .497          & $-.003$          & .010 & .362          & .504          & .507          \\
 		\bottomrule
 	\end{tabular*}
 \end{table}
@@ -60,7 +60,8 @@ On balanced accuracy both classifiers placed raw first and MOMENT last, while th
 	\label{fig:tsne}
 \end{figure*}
 
-Figure~\ref{fig:tsne} shows the same difficulty geometrically: none of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
+Figure~\ref{fig:tsne} shows the same difficulty geometrically. 
+None of the four representations arranges windows by engagement rating, and the colours are as mixed in the learned embeddings as in the raw signal.
 Colouring the identical projections by participant is more informative.
 Raw signals form clear participant-dominated patches, handcrafted features and GazeMAE group more weakly, and the MOMENT projection is close to uniform.
 The clearest visible structure is therefore person-specific, and the weaker grouping in the frozen embeddings may reflect smoothing by the encoders.

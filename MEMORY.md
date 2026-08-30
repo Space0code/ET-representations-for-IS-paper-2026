@@ -235,3 +235,24 @@
 - Two further consistency fixes: the coordinate-convention sentence omitted MOMENT (now "the handcrafted features and MOMENT embeddings retain pixel coordinates", with the redundant "before display-coordinate normalisation" dropped from item 4), and Table 1's caption promised "Best value per column in bold" although the SD column carries no bold (now "per metric column"). The `\cite{bozak2024emotion,bozak2026workload}` group that rendered as "[4, 3]" was reordered to "[3, 4]".
 - Known and deliberately left: the stated "0.015 gap to the best handcrafted result" is the difference of the rounded table values (.536 − .521); at full precision it is 0.0156. This rounding convention predates the rerun and is what a reader verifies from Table 1, so it was not changed.
 - Final state: 4 A4 pages, 0 overfull boxes >20 pt, 0 undefined references or citations, no `synctex(busy)` file, all four pages visually inspected.
+
+## 33 — Handcrafted event provenance corrected (2026-08-30)
+
+- The manuscript's earlier claim that blink, fixation and saccade labels came from the tracker's event classification was false. The feature pipeline derives them algorithmically offline from tracker signals; this is not manual human classification.
+- Blinks are inferred from 90--400-ms missing-gaze intervals, fixations use I-DT with a 100-pixel dispersion threshold and 100-ms minimum duration, and saccades are non-blink intervals shorter than 400 ms between successive fixations. The extractor drops an input `Event` column if present.
+- Missingness features are counts and fractions for selected signals, not every recorded channel. `paper/sections/03_methodology.tex` now states the offline event derivation and missingness scope accurately; the exact detector thresholds are retained here and in the extractor rather than expanded in the four-page manuscript.
+
+## 34 — Handcrafted citations and offline wording (2026-08-30)
+
+- The handcrafted-feature description now cites both earlier feature sets as `\cite{bozak2026workload,bozak2024emotion}`, which renders in ascending numerical order as [3, 4]. It explicitly begins the event-method sentence with "Offline detection" and keeps the compact wording required for the four-page limit.
+- A transient malformed/missing `main.bcf` was caused by the documented LaTeX Workshop concurrent-build race (`main.synctex(busy)`), not by the citation command. After the IDE build finished, Biber and LaTeX completed normally: four A4 pages, no undefined citations/references or overfull boxes.
+
+## 35 — Table delta aligned with the primary metric (2026-08-30)
+
+- Table 1's $\Delta$ column now reports the fold-paired improvement in balanced accuracy over the majority baseline, matching the primary metric, rather than the previously reported plain-accuracy delta. The source is `balanced_accuracy_delta_mean` in `results/final_paper_experiment/20260829_150833/tables/paper_main_results.csv` (16 valid folds).
+- Rounded deltas are raw RF +.036, raw MLP +.034, handcrafted RF +.008, handcrafted MLP +.021, GazeMAE RF +.010, GazeMAE MLP +.005, MOMENT RF +.001 and MOMENT MLP −.003. Raw RF is bold as the best delta.
+- The $\Delta$ column is positioned immediately after balanced accuracy and before SD so that the primary score and its paired improvement are read together.
+
+## 36 — Discussion frames the prediction difficulty as real-world (2026-08-30)
+
+- The interpretation of the near-chance results now emphasizes that the gaze windows were collected during unconstrained, real-world office work. It does not imply that the three-second window length itself is the cause of the weak cross-person predictability.

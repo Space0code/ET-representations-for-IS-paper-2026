@@ -44,15 +44,16 @@ Overall, 94.7\,\% of samples fell on the display, and only those entered the des
 
 Four representations were computed from these windows.
 Coordinates are display-normalised for the raw export and in visual-angle units for GazeMAE; the handcrafted features and MOMENT embeddings retain pixel coordinates.
-(1) \textbf{Raw signals} use the five channels, each linearly resampled to 120 samples so that the whole window is covered, flattened into a 600-dimensional vector.
-(2) \textbf{Handcrafted features} describe a window through the ocular events and signals it contains, following the feature set of our earlier eye-tracking work \cite{bozak2026workload}.
-Blinks, fixations and saccades are taken from the tracker's event classification, and each event type contributes counts, rates and duration statistics, together with the location and dispersion of fixations and the amplitude and velocity of saccades.
-The remaining groups summarise pupil size and its rate of change, the eye--screen distance and its dynamics, and the fraction of missing samples in each channel.
+(1)~\textbf{Raw signals} use the five channels, each linearly resampled to 120 samples so that the whole window is covered, flattened into a 600-dimensional vector.
+(2)~\textbf{Handcrafted features} describe a window through the ocular events and signals it contains, following the feature set of our earlier eye-tracking work \cite{bozak2026workload,bozak2024emotion}.
+Offline detection used missing-gaze intervals for blinks, I-DT for fixations and non-blink intervals between fixations for saccades.
+These events contribute count, rate and duration statistics, alongside fixation location and dispersion and saccade amplitude and velocity.
+The remaining groups summarise pupil size and its rate of change, the eye--screen distance and its dynamics, and missing-data counts and fractions for selected signals.
 This gives 181 numeric features per window, which were filtered inside each fold as described in Section~\ref{subsec:design}.
 Window identifiers, timestamps and questionnaire columns were not used as model input.
-(3) \textbf{GazeMAE embeddings} were computed with the public micro--macro autoencoder checkpoints applied to gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
-Following the encoder's own preprocessing, coordinates were rescaled to 35 pixels per degree of visual angle using each recording's display resolution and the measured eye--screen distance, assuming the standard physical size for each resolution.
-(4) \textbf{MOMENT embeddings} were calculated with the \textsc{MOMENT-1-large} encoder applied to the five-channel windows, with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
+(3)~\textbf{GazeMAE embeddings} were computed with the public micro--macro autoencoder checkpoints applied to gaze position and velocity resampled to 500\,Hz, with the 128-dimensional position and velocity codes concatenated into 256 dimensions \cite{bautista2020gazemae}.
+Following the encoder's own preprocessing, coordinates were rescaled to 35 pixels per degree of visual angle using each recording's display resolution and the measured eye--screen distance.
+(4)~\textbf{MOMENT embeddings} were calculated with the \textsc{MOMENT-1-large} encoder applied to the five-channel windows, with an input length of 512 and mean pooling, giving 1{,}024 dimensions \cite{goswami2024moment}.
 Its encoder standardises each channel per window, so the input coordinate scale is immaterial.
 Both pretrained encoders were used out of the box and kept frozen, with no weight updates.
 
@@ -75,8 +76,8 @@ Three predictors were run on every representation: a majority baseline, a random
 For the MLP, a stratified 20\,\% split of the outer training windows was used for early stopping.
 A single seed was used throughout.
 
-We report balanced accuracy as the primary metric: because the positive rate varies so strongly between participants, plain accuracy partly measures a participant's own base rate, while balanced accuracy has a fixed chance level of 0.500 that makes folds comparable.
-Accuracy, together with its improvement over the majority baseline paired within folds, and macro-F1 and ROC-AUC are reported as secondary measures.
+We report balanced accuracy and its paired improvement over the majority baseline as primary measures, because the positive rate varies strongly between participants, plain accuracy partly measures a participant's own base rate, while balanced accuracy has a fixed chance level of 0.500 that makes folds comparable.
+Plain accuracy, macro-F1 and ROC-AUC are reported as secondary measures.
 All metrics were aggregated as unweighted means over participants.
 One participant self-reported every window below the training centre, so that test fold contains a single class.
 Balanced accuracy, macro-F1 and ROC-AUC are therefore defined for 16 folds and accuracy for all 17.
