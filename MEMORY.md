@@ -138,7 +138,7 @@
 - Figure 2 caption no longer says the projections "should not be interpreted"; it now states what is visible (participant patches in raw, near-uniform MOMENT, no rating structure). The interpretation moved to the Results text: raw forms participant-dominated patches, handcrafted/GazeMAE group weakly, MOMENT is near-uniform, most exposed structure is person-specific, and the frozen encoders appear to smooth it away — explicitly flagged as a conjecture because the projections are exploratory.
 - Discussion/Conclusion wording de-"bookified" per the user's style note (no "best read as", "give little reason to", "did not repay their cost"); fine-tuning is now mentioned once instead of three times.
 - **Figure 1 recoloured to blue–red.** `tobii_experiments/make_paper_figures.py` gained module-level `DENSITY_CMAP` (a `LinearSegmentedColormap` with stops `#f7fbff → #c6dbef → #6baed6 → #2166ac → #b2182b → #67001f` at 0/.06/.15/.30/.50/1.0), `BAR_COLOUR = "#2166ac"` and `MEAN_TICK_COLOUR = "#b2182b"`, so panel (b)'s bars use the same blue and the participant-mean ticks the same red as the density map. `paper/figures/fig1_descriptive.pdf` was regenerated from the real 17-subject data (cohort 140,531 windows, 94.7 % on-screen samples reproduced exactly).
-- Raw data root for regenerating figures is `/home/ppg/eyetracking/TrustME-ET/data/raw/TrustMe` (set `TRUSTME_SUBJECT_ROOT` to it; `/mnt/trustme_users` is empty). Use the `trust-me-et` env interpreter at `/home/ppg/miniconda3/envs/trust-me-et/bin/python`. The gaze-histogram scan over all subjects takes a few minutes, so cache `labels`/`hist` when iterating on figure styling.
+- Raw data root for regenerating figures is `/home/ppg/eyetracking/TrustME-ET-end-to-end/data/TrustMe` (set `TRUSTME_SUBJECT_ROOT` to it; `/mnt/trustme_users` is empty). Use the `trust-me-et` env interpreter at `/home/ppg/miniconda3/envs/trust-me-et/bin/python`. The gaze-histogram scan over all subjects takes a few minutes, so cache `labels`/`hist` when iterating on figure styling.
 - Still open by the user's explicit choice: the red `\placeholder` for funding and grant numbers in `\begin{acks}` stays until submission.
 
 ## 21 — Full scientific and language audit (2026-08-26)
@@ -256,3 +256,10 @@
 ## 36 — Discussion frames the prediction difficulty as real-world (2026-08-30)
 
 - The interpretation of the near-chance results now emphasizes that the gaze windows were collected during unconstrained, real-world office work. It does not imply that the three-second window length itself is the cause of the weak cross-person predictability.
+
+## 37 — Local storage consolidated (2026-09-10)
+
+- The canonical local 17-subject TrustMe tree is now `TrustME-ET-end-to-end/data/TrustMe`. Missing ML exports, Yassine data, window segmentation and display metadata were consolidated into it from `TrustME-ET/data/raw/TrustMe`, then the full 119.43 GB source set passed a byte-level checksum comparison with zero differences before the old TrustME-ET and moment4ET raw duplicates were removed.
+- Active local analysis and coordinate-normalization defaults now point to the end-to-end tree. README markers remain at the removed duplicate locations. `TrustME-ET-end-to-end/data/processed` and all MOMENT intermediates were deliberately retained.
+- GFM reproducible caches and generated experiment snapshot CSVs were removed while manifests, metrics, plots, configs, logs and trained models were retained. eSEEd keeps the original MAT file, its MATLAB extraction helper and the smallest complete 480-file extracted set at `data/processed/eSEEd_v2_processed`; redundant conversion stages were removed.
+- The final GazeMAE visual-angle rescaling and safe one-representation exporter were committed and pushed to `TrustME-ET-end-to-end` as `c3d3701` before data cleanup.

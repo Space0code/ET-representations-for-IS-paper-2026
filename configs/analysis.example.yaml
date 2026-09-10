@@ -1,5 +1,5 @@
 # Root containing <subject>/ml/tobii/<standard representation CSVs>.
-trustme_root: /home/ppg/eyetracking/TrustME-ET/data/raw/TrustMe
+trustme_root: /home/ppg/eyetracking/TrustME-ET-end-to-end/data/TrustMe
 # Read coordinate-normalized copies created beside each subject's `tobii` export.
 subject_export_dir: tobii_coordinate_normalized
 

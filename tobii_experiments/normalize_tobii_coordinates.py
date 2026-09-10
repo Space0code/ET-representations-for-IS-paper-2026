@@ -25,7 +25,7 @@ import pandas as pd
 import yaml
 
 
-DEFAULT_TRUSTME_ROOT = Path("/home/ppg/eyetracking/TrustME-ET/data/raw/TrustMe")
+DEFAULT_TRUSTME_ROOT = Path("/home/ppg/eyetracking/TrustME-ET-end-to-end/data/TrustMe")
 DEFAULT_SOURCE_DIRECTORY = "tobii"
 DEFAULT_DESTINATION_DIRECTORY = "tobii_coordinate_normalized"
 DEFAULT_RAW_SAMPLES_FILENAME = "tobii_raw_samples.csv"
