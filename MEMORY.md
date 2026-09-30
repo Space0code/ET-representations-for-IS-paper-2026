@@ -263,3 +263,9 @@
 - Active local analysis and coordinate-normalization defaults now point to the end-to-end tree. README markers remain at the removed duplicate locations. `TrustME-ET-end-to-end/data/processed` and all MOMENT intermediates were deliberately retained.
 - GFM reproducible caches and generated experiment snapshot CSVs were removed while manifests, metrics, plots, configs, logs and trained models were retained. eSEEd keeps the original MAT file, its MATLAB extraction helper and the smallest complete 480-file extracted set at `data/processed/eSEEd_v2_processed`; redundant conversion stages were removed.
 - The final GazeMAE visual-angle rescaling and safe one-representation exporter were committed and pushed to `TrustME-ET-end-to-end` as `c3d3701` before data cleanup.
+
+## 38 — Conference talk deck (2026-09-30)
+
+- `presentation/` holds the SCAI / IS 2026 talk: `IS2026_SCAI_ET_representations.pptx` (12 main + 2 backup slides, speaker notes with per-slide timing), its generator `build_deck.js` (pptxgenjs) and a PNG render of Figure 1. All numbers come from the final manuscript (Table 1, Section 3).
+- Timing assumption: ~15-min slot = ~12 min talk + ~3 min Q&A. The official IS 2026 presenter instructions (slot length, slide template) could not be verified from the build environment (is.ijs.si blocked); confirm the slot in the published SCAI programme and trim slides 4/11 if it is shorter.
+- No official IS PowerPoint template was found; the deck uses its own ink/amber palette (Cambria headings, Calibri body) with reusable slide masters.
